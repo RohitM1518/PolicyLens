@@ -1,8 +1,6 @@
 import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
-import bcrypt from 'bcryptjs';
-
-const mongoose = require('mongoose');
+import bcrypt from 'bcrypt';
 
 const userSchema = new mongoose.Schema({
     name: {
@@ -28,32 +26,32 @@ const userSchema = new mongoose.Schema({
     },
     age: {
         type: Number,
-        required: true,
+        // required: true,
         min: 0
     },
     maritalStatus: {
         type: String,
         enum: ['Single', 'Married', 'Divorced', 'Widowed'],
-        required: true
+        // required: true
     },
     occupation: {
         type: String,
-        required: true,
+        // required: true,
         trim: true
     },
     location: {
         type: String,
-        required: true,
+        // required: true,
         trim: true
     },
     monthlySalary: {
         type: Number,
-        required: true,
+        // required: true,
         min: 0
     },
     annualIncome: {
         type: Number,
-        required: true,
+        // required: true,
         min: 0
     },
     existingDebts: {
@@ -80,7 +78,7 @@ const userSchema = new mongoose.Schema({
     healthStatus: {
         type: String,
         enum: ['Excellent', 'Good', 'Fair', 'Poor'],
-        required: true
+        // required: true
     },
     vehicleOwnership: {
         type: Boolean,
@@ -93,18 +91,18 @@ const userSchema = new mongoose.Schema({
     },
     primaryGoalForInsurance: {
         type: String,
-        required: true,
+        // required: true,
         trim: true
     },
     coverageAmountPreference: {
         type: Number,
-        required: true,
+        // required: true,
         min: 0
     },
     willingnessToPayPremiums: {
         type: String,
         enum: ['Monthly', 'Quarterly', 'Annually'],
-        required: true
+        // required: true
     },
     pastClaimsHistory: {
         type: Boolean,
@@ -112,6 +110,7 @@ const userSchema = new mongoose.Schema({
     }
 });
 
+// Hash password before saving
 userSchema.pre('save',async function (next) {
     if(!this.isModified('password')){
         return next();
@@ -120,17 +119,20 @@ userSchema.pre('save',async function (next) {
     next();
 })
 
+// Method used to compare hashed password and plain text password
 userSchema.methods.isPasswordCorrect=async function (password) {
     return await bcrypt.compare(password, this.password);
 }
 
+// Method used to generate refresh token using user data and key
 userSchema.methods.generateRefreshToken=async function () {
-    const refreshToken = jwt.sign({_id: this._id}, process.env.REFRESH_TOKEN_SECRET, {expiresIn: process.env.REFRESH_TOKEN_EXPIRY});
+    const refreshToken = jwt.sign({_id: this._id}, process.env.REFRESH_TOKEN_SECRET_KEY, {expiresIn: process.env.REFRESH_TOKEN_EXPIRY});
     return refreshToken;
 }
 
+// Method used to generate access token using user data and key
 userSchema.methods.generateAccessToken=async function () {
-    const accessToken = jwt.sign({_id: this._id,name: this.name,email:this.email}, process.env.ACCESS_TOKEN_SECRET, {expiresIn: process.env.ACCESS_TOKEN_EXPIRY});
+    const accessToken = jwt.sign({_id: this._id,name: this.name,email:this.email}, process.env.ACCESS_TOKEN_SECRET_KEY, {expiresIn: process.env.ACCESS_TOKEN_EXPIRY});
     return accessToken;
 }
 

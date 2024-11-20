@@ -1,7 +1,8 @@
-import { asyncHandler } from "../utils/asyncHandler";
-import { User } from "../models/userModel";
-import APIError from "../utils/apiError";
-import APIResponse from "../utils/apiResponse";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { User } from "../models/userModel.js";
+import APIError from "../utils/apiError.js";
+import APIResponse from "../utils/apiResponse.js";
+import jwt from "jsonwebtoken";
 
 const generateTokens=async (userId)=>{
     try {
@@ -85,13 +86,13 @@ const logoutUser = asyncHandler(async(req,res)=>{
     res.clearCookie("refreshToken", options).clearCookie("accessToken", options).json(new APIResponse(200, null, "User logged out successfully"));
 })
 
-const refershAccessToken = asyncHandler(async(req,res)=>{
+const refreshAccessToken = asyncHandler(async(req,res)=>{
     const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
     if (!incomingRefreshToken || incomingRefreshToken === "null") {
         throw new ApiError(401, "Unauthorized request")
     }
     try {
-        const decodedData = await jwt.verify(incomingRefreshToken, process.env.JWT_SECRET);
+        const decodedData = await jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET_KEY);
         const user = await User.findById(decodedData._id);
         if(!user){
             throw new APIError(401, "Invalid refresh token");
@@ -165,7 +166,7 @@ const updateUserProfile = asyncHandler(async (req, res) => {
     }
 
     // Find the user by ID and update the provided fields
-    const userId = req.params.id; // Assuming the user ID is passed as a URL parameter
+    const userId = req.user._id;
     const updatedUser = await User.findByIdAndUpdate(
         userId,
         { $set: updateData },
@@ -183,7 +184,7 @@ export{
     registerUser,
     loginUser,
     logoutUser,
-    refershAccessToken,
+    refreshAccessToken,
     getUserProfile,
     updateUserProfile,
     changePassword

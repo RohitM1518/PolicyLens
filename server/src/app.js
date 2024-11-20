@@ -1,6 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
+import userRoutes from './routes/userRoutes.js'
 
 const app=express();
 
@@ -20,4 +21,15 @@ app.use(express.static("public"));
 // Parse cookies
 app.use(cookieParser());
 
+// Routes
+app.use('/api/v1/user', userRoutes);
+
+// 404 Error handler
+app.use((req, _, next) => {
+    try {
+        throw new Error();
+    } catch (err) {
+        httpError(next, err, req, 404)
+    }
+})
 export {app}
