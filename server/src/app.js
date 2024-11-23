@@ -8,6 +8,7 @@ import geminiRoutes from './routes/geminiRoutes.js'
 
 const app=express();
 
+app.use(cors())
 const corsOptions = {
     origin:process.env.CORS_ORIGIN,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',

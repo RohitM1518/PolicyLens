@@ -27,6 +27,7 @@ const cookiesOptions={
 // Register a new user
 const registerUser = asyncHandler(async (req, res) => {
     const {name, email,password,age,maritalStatus,occupation,location,monthlySalary,annualIncome,existingDebts,familySize,healthConditionsInFamily,lifestyleHabits,existingInsurancePolicies,healthStatus,vehicleOwnership,travelHabits,primaryGoalForInsurance,coverageAmountPreference,willingnessToPayPremiums,pastClaimsHistory}=req.body;
+    console.log(req.body);
     if(!name || !email || !password){
         throw new APIError(400, "Please provide all the required fields");
     }
