@@ -2,6 +2,9 @@ import express from 'express'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
 import userRoutes from './routes/userRoutes.js'
+import geminiRoutes from './routes/geminiRoutes.js'
+// import { httpError } from './utils/httpError.js'
+// import { configGemini } from './controllers/geminiController.js'
 
 const app=express();
 
@@ -23,6 +26,7 @@ app.use(cookieParser());
 
 // Routes
 app.use('/api/v1/user', userRoutes);
+app.use('/api/v1/gemini', geminiRoutes);
 
 // 404 Error handler
 app.use((req, _, next) => {

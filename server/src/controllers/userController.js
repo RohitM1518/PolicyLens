@@ -4,7 +4,8 @@ import APIError from "../utils/apiError.js";
 import APIResponse from "../utils/apiResponse.js";
 import jwt from "jsonwebtoken";
 
-const generateTokens=async (userId)=>{
+//Generate access token and refresh token and stores the refresh token in the database
+const generateTokens=async(userId)=>{
     try {
         const user = await User.findById(userId);
         const accessToken = await user.generateAccessToken();
@@ -17,11 +18,13 @@ const generateTokens=async (userId)=>{
         throw new APIError(500, "Internal Server Error");
     }
 }
-const options={
+
+const cookiesOptions={
     httpOnly: true,
     secure: false
 }
 
+// Register a new user
 const registerUser = asyncHandler(async (req, res) => {
     const {name, email,password,age,maritalStatus,occupation,location,monthlySalary,annualIncome,existingDebts,familySize,healthConditionsInFamily,lifestyleHabits,existingInsurancePolicies,healthStatus,vehicleOwnership,travelHabits,primaryGoalForInsurance,coverageAmountPreference,willingnessToPayPremiums,pastClaimsHistory}=req.body;
     if(!name || !email || !password){
@@ -60,9 +63,10 @@ const registerUser = asyncHandler(async (req, res) => {
     }
     
     const {accessToken, refreshToken} = await generateTokens(user._id);
-    return res.status(201).cookie("refreshToken", refreshToken, options).json(new APIResponse(201, {user: createdUser, accessToken,refreshToken},"User registered successfully"));
+    return res.status(201).cookie("refreshToken", refreshToken, cookiesOptions).json(new APIResponse(201, {user: createdUser, accessToken,refreshToken},"User registered successfully"));
 });
 
+// Login a user
 const loginUser = asyncHandler(async(req,res)=>{
     const {email,password}=req.body;
     if(!email || !password){
@@ -78,14 +82,16 @@ const loginUser = asyncHandler(async(req,res)=>{
     }
     const {accessToken, refreshToken} = await generateTokens(user._id);
     const loggedInUser = await User.findById(user._id).select("-password -refreshToken");
-    return res.status(200).cookie("refreshToken", refreshToken, options).cookie("accessToken",accessToken,options).json(new APIResponse(200, {user: loggedInUser, accessToken,refreshToken},"User logged in successfully"));
+    return res.status(200).cookie("refreshToken", refreshToken, cookiesOptions).cookie("accessToken",accessToken,cookiesOptions).json(new APIResponse(200, {user: loggedInUser, accessToken,refreshToken},"User logged in successfully"));
 })
 
+// Logout a user
 const logoutUser = asyncHandler(async(req,res)=>{
     await User.findByIdAndUpdate(req.user._id, {refreshToken: ''});
-    res.clearCookie("refreshToken", options).clearCookie("accessToken", options).json(new APIResponse(200, null, "User logged out successfully"));
+    res.clearCookie("refreshToken", cookiesOptions).clearCookie("accessToken", cookiesOptions).json(new APIResponse(200, null, "User logged out successfully"));
 })
 
+// Refresh the access token
 const refreshAccessToken = asyncHandler(async(req,res)=>{
     const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
     if (!incomingRefreshToken || incomingRefreshToken === "null") {
@@ -101,12 +107,13 @@ const refreshAccessToken = asyncHandler(async(req,res)=>{
             throw new APIError(401, "Invalid refresh token");
         }
         const {accessToken, refreshToken} = await generateTokens(user._id);
-        return res.status(200).cookie("refreshToken", refreshToken, options).cookie("accessToken",accessToken,options).json(new APIResponse(200, {accessToken,refreshToken},"Access token refreshed successfully"));
+        return res.status(200).cookie("refreshToken", refreshToken, cookiesOptions).cookie("accessToken",accessToken,cookiesOptions).json(new APIResponse(200, {accessToken,refreshToken},"Access token refreshed successfully"));
     } catch (error) {
         throw new APIError(401, error?.message || "Invalid Refresh Token");
     }
 });
 
+// Change the password of the user
 const changePassword = asyncHandler(async(req,res)=>{
     const {currentPassword, newPassword} = req.body;
     if(!currentPassword || !newPassword){
@@ -122,11 +129,13 @@ const changePassword = asyncHandler(async(req,res)=>{
     return res.status(200).json(new APIResponse(200, null, "Password changed successfully"));
 })
 
+// Get the user profile
 const getUserProfile = asyncHandler(async(req,res)=>{
     const user= await User.findById(req.user._id).select("-password -refreshToken");
     return res.status(200).json(new APIResponse(200, {user},"User profile retrieved successfully"));
 })
 
+// Update the user profile
 const updateUserProfile = asyncHandler(async (req, res) => {
     const updateData = {};
 

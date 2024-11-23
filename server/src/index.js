@@ -1,4 +1,5 @@
 import {app} from './app.js'
+import { configGemini } from './config/geminiConfig.js';
 import connectDB from './database/connectDatabase.js'
 import dotenv from 'dotenv'
 
@@ -7,6 +8,7 @@ dotenv.config({
 });
 
 const PORT = process.env.PORT || 3000;
+configGemini()
 connectDB()
 .then(()=>{
     app.listen(PORT,()=>{
