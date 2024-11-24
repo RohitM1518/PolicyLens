@@ -5,6 +5,11 @@ import './index.css'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import AuthLayout from './utils/AuthLayout.jsx'
 import {Home,Summaries,RegionalLanguage,ChatBot,SignIn,SignUp} from './pages/index.js'
+import { Provider } from 'react-redux'
+import { store } from './redux/store.js'
+import { ErrorContextProvider } from './contexts/ErrorContext.jsx'
+import { LoadingContextProvider } from './contexts/LoadingContext.jsx'
+import { UserContextProvider } from './contexts/UserContext.jsx'
 
 const router = createBrowserRouter([
   {
@@ -53,6 +58,14 @@ const router = createBrowserRouter([
 ])
 createRoot(document.getElementById('root')).render(
   <StrictMode>
+    <UserContextProvider>
+    <LoadingContextProvider>
+    <ErrorContextProvider>
+    <Provider store={store}>
     <RouterProvider router={router} />
+    </Provider>
+    </ErrorContextProvider>
+    </LoadingContextProvider>
+    </UserContextProvider>
   </StrictMode>,
 )
