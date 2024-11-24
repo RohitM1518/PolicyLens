@@ -3,7 +3,11 @@ import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import axios from 'axios';
-
+import { useLoadingContext } from '../contexts/LoadingContext';
+import {useDispatch} from 'react-redux'
+import {login} from '../redux/userSlice.js'
+import { useErrorContext} from '../contexts/ErrorContext.jsx'
+import { errorParser } from '../utils/errorParser.js';
 const steps = [
   {
     title: 'Basic Information',
@@ -75,13 +79,22 @@ const initialValues = {
 export default function SignUp() {
   const [currentStep, setCurrentStep] = useState(0);
   const backendURL = import.meta.env.VITE_BACKEND_URL
+  const {setIsLoading}=useLoadingContext();
+  const {setError}=useErrorContext();
+  const dispatch = useDispatch();
+
   const handleSubmit = async (values) => {
     console.log('Form submitted:', values);
     try {
+      setIsLoading(true);
       const res = await axios.post(`${backendURL}/user/register`,values);
-      console.log("User logged in");
+      console.log("User logged in",res.data);
+      dispatch(login(res?.data?.data?.user))
     } catch (error) {
+      setError(errorParser(error))
       console.log(error)
+    }finally{
+      setIsLoading(false)
     }
   };
 
