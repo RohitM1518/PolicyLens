@@ -83,7 +83,8 @@ export default function SignUp() {
   const {setError}=useErrorContext();
   const dispatch = useDispatch();
 
-  const handleSubmit = async (values) => {
+  const handleSubmit = async (event,values) => {
+    event.preventDefault();
     console.log('Form submitted:', values);
     try {
       setIsLoading(true);

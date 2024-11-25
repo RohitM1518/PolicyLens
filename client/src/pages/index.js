@@ -4,6 +4,8 @@ import RegionalLanguage from "./RegionalLanguage";
 import SignIn from "./SignIn";
 import SignUp from "./SignUp";
 import Summaries from "./Summaries";
+import Dashboard from "./Dashboard";
+import Profile from "./Profile";
 
 export{
     ChatBot,
@@ -11,5 +13,7 @@ export{
     RegionalLanguage,
     SignIn,
     SignUp,
-    Summaries
+    Summaries,
+    Dashboard,
+    Profile
 }

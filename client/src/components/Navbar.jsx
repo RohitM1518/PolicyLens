@@ -1,19 +1,29 @@
-import { useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
-import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
+import { useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Bars3Icon, XMarkIcon, UserCircleIcon } from '@heroicons/react/24/outline';
+import { Menu, Transition } from '@headlessui/react';
+import { Fragment } from 'react';
 
 const navigation = [
   { name: 'Home', href: '/' },
   { name: 'Summaries PDF', href: '/summaries' },
   { name: 'Regional Language', href: '/regional-language' },
   { name: 'Chat Bot', href: '/chatbot' },
-]
+];
 
 export default function Navbar() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const location = useLocation()
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+  // This should be replaced with actual auth state management
+  const [isLoggedIn, setIsLoggedIn] = useState(true);
 
-  const isActive = (path) => location.pathname === path
+  const isActive = (path) => location.pathname === path;
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    navigate('/');
+  };
 
   return (
     <header className="bg-white shadow-sm sticky top-0 z-50">
@@ -38,7 +48,7 @@ export default function Navbar() {
             <Link
               key={item.name}
               to={item.href}
-              className={`text-sm font-semibold leading-6 \${
+              className={`text-sm font-semibold leading-6 ${
                 isActive(item.href)
                   ? 'text-secondary'
                   : 'text-gray-900 hover:text-secondary'
@@ -49,22 +59,80 @@ export default function Navbar() {
           ))}
         </div>
         <div className="hidden lg:flex lg:flex-1 lg:justify-end lg:gap-x-4">
-          <Link
-            to="/signin"
-            className={`text-sm font-semibold leading-6 \${
-              isActive('/signin')
-                ? 'text-secondary'
-                : 'text-gray-900 hover:text-secondary'
-            } px-4 py-2 rounded-md`}
-          >
-            Sign in
-          </Link>
-          <Link
-            to="/signup"
-            className="text-sm font-semibold leading-6 text-white bg-primary hover:bg-secondary px-4 py-2 rounded-md transition-colors duration-300"
-          >
-            Sign up
-          </Link>
+          {isLoggedIn ? (
+            <Menu as="div" className="relative ml-3">
+              <Menu.Button className="flex items-center gap-x-1 text-sm font-semibold leading-6 text-gray-900">
+                <UserCircleIcon className="h-8 w-8 text-gray-400 hover:text-secondary" aria-hidden="true" />
+              </Menu.Button>
+              <Transition
+                as={Fragment}
+                enter="transition ease-out duration-100"
+                enterFrom="transform opacity-0 scale-95"
+                enterTo="transform opacity-100 scale-100"
+                leave="transition ease-in duration-75"
+                leaveFrom="transform opacity-100 scale-100"
+                leaveTo="transform opacity-0 scale-95"
+              >
+                <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                  <Menu.Item>
+                    {({ active }) => (
+                      <Link
+                        to="/dashboard"
+                        className={`${
+                          active ? 'bg-gray-100' : ''
+                        } block px-4 py-2 text-sm text-gray-700`}
+                      >
+                        Dashboard
+                      </Link>
+                    )}
+                  </Menu.Item>
+                  <Menu.Item>
+                    {({ active }) => (
+                      <Link
+                        to="/profile"
+                        className={`${
+                          active ? 'bg-gray-100' : ''
+                        } block px-4 py-2 text-sm text-gray-700`}
+                      >
+                        Manage Profile
+                      </Link>
+                    )}
+                  </Menu.Item>
+                  <Menu.Item>
+                    {({ active }) => (
+                      <button
+                        onClick={handleLogout}
+                        className={`${
+                          active ? 'bg-gray-100' : ''
+                        } block w-full text-left px-4 py-2 text-sm text-gray-700`}
+                      >
+                        Sign out
+                      </button>
+                    )}
+                  </Menu.Item>
+                </Menu.Items>
+              </Transition>
+            </Menu>
+          ) : (
+            <>
+              <Link
+                to="/signin"
+                className={`text-sm font-semibold leading-6 ${
+                  isActive('/signin')
+                    ? 'text-secondary'
+                    : 'text-gray-900 hover:text-secondary'
+                } px-4 py-2 rounded-md`}
+              >
+                Sign in
+              </Link>
+              <Link
+                to="/signup"
+                className="text-sm font-semibold leading-6 text-white bg-primary hover:bg-secondary px-4 py-2 rounded-md transition-colors duration-300"
+              >
+                Sign up
+              </Link>
+            </>
+          )}
         </div>
       </nav>
       {/* Mobile menu */}
@@ -92,7 +160,7 @@ export default function Navbar() {
                     <Link
                       key={item.name}
                       to={item.href}
-                      className={`-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 \${
+                      className={`-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 ${
                         isActive(item.href)
                           ? 'text-secondary bg-gray-50'
                           : 'text-gray-900 hover:bg-gray-50'
@@ -104,24 +172,50 @@ export default function Navbar() {
                   ))}
                 </div>
                 <div className="py-6 space-y-2">
-                  <Link
-                    to="/signin"
-                    className={`-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 \${
-                      isActive('/signin')
-                        ? 'text-secondary bg-gray-50'
-                        : 'text-gray-900 hover:bg-gray-50'
-                    }`}
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Sign in
-                  </Link>
-                  <Link
-                    to="/signup"
-                    className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-white bg-primary hover:bg-secondary"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Sign up
-                  </Link>
+                  {isLoggedIn ? (
+                    <>
+                      <Link
+                        to="/dashboard"
+                        className="block px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 rounded-lg"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Dashboard
+                      </Link>
+                      <Link
+                        to="/profile"
+                        className="block px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 rounded-lg"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Manage Profile
+                      </Link>
+                      <button
+                        onClick={() => {
+                          handleLogout();
+                          setMobileMenuOpen(false);
+                        }}
+                        className="block w-full text-left px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 rounded-lg"
+                      >
+                        Sign out
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <Link
+                        to="/signin"
+                        className="block px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50 rounded-lg"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Sign in
+                      </Link>
+                      <Link
+                        to="/signup"
+                        className="block px-3 py-2 text-base font-semibold leading-7 text-white bg-primary hover:bg-secondary rounded-lg"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Sign up
+                      </Link>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -129,5 +223,5 @@ export default function Navbar() {
         </div>
       )}
     </header>
-  )
+  );
 }

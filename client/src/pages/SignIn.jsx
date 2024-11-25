@@ -1,13 +1,60 @@
+import { useState } from 'react';
+import axios from 'axios';
+import { useDispatch } from "react-redux";
+import { useLoadingContext } from "../contexts/LoadingContext";
+import { useErrorContext } from "../contexts/ErrorContext";
+import { login } from '../redux/userSlice';
+import { useNavigate } from 'react-router-dom';
+import { errorParser } from '../utils/errorParser';
+
 export default function SignIn() {
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  });
+  
+  const backendURL = import.meta.env.VITE_BACKEND_URL;
+  const { setIsLoading } = useLoadingContext();
+  const { setError } = useErrorContext();
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const handleInputChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    console.log('Form submitted:', formData);
+    
+    try {
+      setIsLoading(true);
+      const res = await axios.post(`${backendURL}/user/login`, formData);
+      console.log("User logged in", res.data);
+      dispatch(login(res?.data?.data?.user));
+      navigate('/'); // Redirect to home page after successful login
+    } catch (error) {
+      setError(errorParser(error));
+      console.log(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="flex min-h-[calc(100vh-200px)] flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">Sign in to your account</h2>
+        <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
+          Sign in to your account
+        </h2>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <form className="space-y-6" action="#" method="POST">
+          <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
               <label htmlFor="email" className="block text-sm font-medium leading-6 text-gray-900">
                 Email address
@@ -19,6 +66,8 @@ export default function SignIn() {
                   type="email"
                   autoComplete="email"
                   required
+                  value={formData.email}
+                  onChange={handleInputChange}
                   className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6"
                 />
               </div>
@@ -35,28 +84,10 @@ export default function SignIn() {
                   type="password"
                   autoComplete="current-password"
                   required
+                  value={formData.password}
+                  onChange={handleInputChange}
                   className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6"
                 />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  name="remember-me"
-                  type="checkbox"
-                  className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-secondary"
-                />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
-                  Remember me
-                </label>
-              </div>
-
-              <div className="text-sm">
-                <a href="#" className="font-medium text-primary hover:text-secondary">
-                  Forgot your password?
-                </a>
               </div>
             </div>
 
@@ -72,5 +103,5 @@ export default function SignIn() {
         </div>
       </div>
     </div>
-  )
+  );
 }
