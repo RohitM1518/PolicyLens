@@ -34,7 +34,7 @@ export default function SignIn() {
       setIsLoading(true);
       const res = await axios.post(`${backendURL}/user/login`, formData);
       console.log("User logged in", res.data);
-      dispatch(login(res?.data?.data?.user));
+      dispatch(login(res?.data?.data));
       navigate('/'); // Redirect to home page after successful login
     } catch (error) {
       setError(errorParser(error));

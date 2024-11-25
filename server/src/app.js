@@ -5,15 +5,21 @@ import userRoutes from './routes/userRoutes.js'
 import geminiRoutes from './routes/geminiRoutes.js'
 // import { httpError } from './utils/httpError.js'
 // import { configGemini } from './controllers/geminiController.js'
+import dotenv from 'dotenv'
+
+dotenv.config({
+    path:'./.env'
+});
 
 const app=express();
 
-app.use(cors())
+// app.use(cors())
+
 const corsOptions = {
     origin:process.env.CORS_ORIGIN,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     allowedHeaders: ['Content-Type','Authorization'],
-    credentials: true
+    credentials: true,
 }
 app.use(cors(corsOptions));
 app.use(express.json({ limit: "16kb" }));

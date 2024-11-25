@@ -55,13 +55,13 @@ const router = createBrowserRouter([
       },
       {
         path: '/dashboard',
-        element: <AuthLayout authentication={false}>
+        element: <AuthLayout authentication={true}>
           <Dashboard />
         </AuthLayout>
       },
       {
         path: '/profile',
-        element: <AuthLayout authentication={false}>
+        element: <AuthLayout authentication={true}>
           <Profile />
         </AuthLayout>
       },

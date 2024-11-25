@@ -4,7 +4,7 @@ import Footer from './components/Footer'
 import { useResponseContext } from './contexts/ResponseContext'
 import { useErrorContext } from './contexts/ErrorContext'
 import { useLoadingContext } from './contexts/LoadingContext'
-
+import { persistor} from './redux/store'
 function App() {
   const { response, setResponse } = useResponseContext()
   const { error, setError } = useErrorContext()
@@ -19,6 +19,11 @@ function App() {
       setResponse('')
     }, 5000)
   }
+
+  // persistor.purge().then(() => {
+  //   console.log('Persisted state cleared');
+  // });
+
 
   return (
     <>

@@ -3,6 +3,14 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Bars3Icon, XMarkIcon, UserCircleIcon } from '@heroicons/react/24/outline';
 import { Menu, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import axios from 'axios';
+import { useResponseContext } from '../contexts/ResponseContext';
+import { useErrorContext } from '../contexts/ErrorContext';
+import { errorParser } from '../utils/errorParser';
+import { logout } from '../redux/userSlice';
+import { useLoadingContext } from '../contexts/LoadingContext';
+import { persistor } from '../redux/store';
 
 const navigation = [
   { name: 'Home', href: '/' },
@@ -15,14 +23,41 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { setResponse } = useResponseContext();
+  const { setError } = useErrorContext();
+  const dispatch = useDispatch()
+  const { setIsLoading } = useLoadingContext();
   // This should be replaced with actual auth state management
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
-
+  const isLoggedIn = useSelector((state) => state?.isLoggedIn);
+  const accessToken = useSelector((state) => state?.currentUser?.accessToken);
+  // console.log("Status " + accessToken)
   const isActive = (path) => location.pathname === path;
 
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    navigate('/');
+  const backendURL = import.meta.env.VITE_BACKEND_URL;
+
+  const handleLogout = async () => {
+    try {
+      setIsLoading(true)
+      await axios.delete(`${backendURL}/user/logout`,{
+        withCredentials:true,
+        headers:{
+            'Authorization':`Bearer ${accessToken}`
+        }
+    })
+      dispatch(logout())
+      navigate('/');
+      setResponse()
+    } catch (error) {
+      setError(errorParser(error));
+      console.log(error)
+    }
+    finally {
+      setIsLoading(false);
+      // persistor.purge().then(() => {
+      //   console.log('Persisted state cleared');
+      // });
+      // navigate('/signin')
+    }
   };
 
   return (
@@ -48,11 +83,10 @@ export default function Navbar() {
             <Link
               key={item.name}
               to={item.href}
-              className={`text-sm font-semibold leading-6 ${
-                isActive(item.href)
-                  ? 'text-secondary'
-                  : 'text-gray-900 hover:text-secondary'
-              }`}
+              className={`text-sm font-semibold leading-6 ${isActive(item.href)
+                ? 'text-secondary'
+                : 'text-gray-900 hover:text-secondary'
+                }`}
             >
               {item.name}
             </Link>
@@ -78,9 +112,8 @@ export default function Navbar() {
                     {({ active }) => (
                       <Link
                         to="/dashboard"
-                        className={`${
-                          active ? 'bg-gray-100' : ''
-                        } block px-4 py-2 text-sm text-gray-700`}
+                        className={`${active ? 'bg-gray-100' : ''
+                          } block px-4 py-2 text-sm text-gray-700`}
                       >
                         Dashboard
                       </Link>
@@ -90,9 +123,8 @@ export default function Navbar() {
                     {({ active }) => (
                       <Link
                         to="/profile"
-                        className={`${
-                          active ? 'bg-gray-100' : ''
-                        } block px-4 py-2 text-sm text-gray-700`}
+                        className={`${active ? 'bg-gray-100' : ''
+                          } block px-4 py-2 text-sm text-gray-700`}
                       >
                         Manage Profile
                       </Link>
@@ -102,9 +134,8 @@ export default function Navbar() {
                     {({ active }) => (
                       <button
                         onClick={handleLogout}
-                        className={`${
-                          active ? 'bg-gray-100' : ''
-                        } block w-full text-left px-4 py-2 text-sm text-gray-700`}
+                        className={`${active ? 'bg-gray-100' : ''
+                          } block w-full text-left px-4 py-2 text-sm text-gray-700`}
                       >
                         Sign out
                       </button>
@@ -117,11 +148,10 @@ export default function Navbar() {
             <>
               <Link
                 to="/signin"
-                className={`text-sm font-semibold leading-6 ${
-                  isActive('/signin')
-                    ? 'text-secondary'
-                    : 'text-gray-900 hover:text-secondary'
-                } px-4 py-2 rounded-md`}
+                className={`text-sm font-semibold leading-6 ${isActive('/signin')
+                  ? 'text-secondary'
+                  : 'text-gray-900 hover:text-secondary'
+                  } px-4 py-2 rounded-md`}
               >
                 Sign in
               </Link>
@@ -160,11 +190,10 @@ export default function Navbar() {
                     <Link
                       key={item.name}
                       to={item.href}
-                      className={`-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 ${
-                        isActive(item.href)
-                          ? 'text-secondary bg-gray-50'
-                          : 'text-gray-900 hover:bg-gray-50'
-                      }`}
+                      className={`-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 ${isActive(item.href)
+                        ? 'text-secondary bg-gray-50'
+                        : 'text-gray-900 hover:bg-gray-50'
+                        }`}
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       {item.name}

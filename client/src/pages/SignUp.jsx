@@ -90,7 +90,7 @@ export default function SignUp() {
       setIsLoading(true);
       const res = await axios.post(`${backendURL}/user/register`,values);
       console.log("User logged in",res.data);
-      dispatch(login(res?.data?.data?.user))
+      dispatch(login(res?.data?.data))
     } catch (error) {
       setError(errorParser(error))
       console.log(error)
