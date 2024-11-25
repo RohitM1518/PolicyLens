@@ -1,4 +1,6 @@
 import { ArrowRightIcon, DocumentTextIcon, ChatBubbleBottomCenterTextIcon, GlobeAltIcon } from '@heroicons/react/24/outline'
+import { useSelector } from 'react-redux'
+import { Link } from 'react-scroll';
 
 const features = [
   {
@@ -19,6 +21,7 @@ const features = [
 ]
 
 export default function Hero() {
+  const isLoggedIn = useSelector(state=>state?.isLoggedIn);
   return (
     <div className="relative isolate">
       {/* Background gradient */}
@@ -50,20 +53,22 @@ export default function Hero() {
           </p>
           <div className="mt-10 flex items-center justify-center gap-x-6">
             <a
-              href="/signup"
+              href={isLoggedIn?"/summaries":"/signup"}
               className="rounded-md bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-secondary transition-all duration-300 hover:scale-105"
             >
               Get started
               <ArrowRightIcon className="ml-2 -mr-1 h-4 w-4 inline-block" />
             </a>
-            <a href="#" className="text-sm font-semibold leading-6 text-gray-900 hover:text-secondary transition-colors duration-300">
+            <Link to='section1' smooth={true} duration={500}>
+            <p className="text-sm font-semibold leading-6 text-gray-900 hover:text-secondary transition-colors duration-300 hover:cursor-pointer">
               Learn more <span aria-hidden="true">→</span>
-            </a>
+            </p>
+            </Link>
           </div>
         </div>
 
         {/* Feature section */}
-        <div className="mx-auto mt-20 max-w-7xl px-6 lg:px-8">
+        <div className="mx-auto mt-20 max-w-7xl px-6 lg:px-8" id='section1'>
           <div className="mx-auto max-w-2xl lg:max-w-4xl">
             <div className="mt-16 grid grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-3">
               {features.map((feature) => (

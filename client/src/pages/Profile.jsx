@@ -41,6 +41,8 @@ export default function Profile() {
 
   return (
     <div className="py-10">
+      <h1 className=" text-7xl mb-7 font-semibold opacity-10 text-center">Comming Soon</h1>
+
       <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
         <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
           <div className="p-6">

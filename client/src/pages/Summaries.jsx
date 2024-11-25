@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
-import * as pdfjsLib from 'pdfjs-dist';
-
+import axios from 'axios';
+import Markdown from 'react-markdown'
 // Configure pdf.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 // pdfjs.GlobalWorkerOptions.workerSrc = new URL(
@@ -16,7 +16,7 @@ export default function Summaries() {
   const [numPages, setNumPages] = useState(null);
   const [pageNumber, setPageNumber] = useState(1);
   const [error, setError] = useState(null);
-
+  const backendURL = import.meta.env.VITE_BACKEND_URL;
 
   function onDocumentLoadSuccess({ numPages }) {
     setNumPages(numPages);
@@ -34,22 +34,6 @@ export default function Summaries() {
     setPageNumber(pageNumber - 1);
   }
 
-  const extractTextFromPDF = async (file) => {
-    const arrayBuffer = await file.arrayBuffer();
-    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-    let fullText = '';
-    
-    for (let i = 1; i <= pdf.numPages; i++) {
-      const page = await pdf.getPage(i);
-      const textContent = await page.getTextContent();
-      const pageText = textContent.items.map(item => item.str).join(' ');
-      fullText += pageText + '\n';
-    }
-    
-    return fullText;
-  };
-
-
   const handleFileChange = async (event) => {
     const selectedFile = event.target.files[0];
     setFile(selectedFile);
@@ -59,20 +43,18 @@ export default function Summaries() {
       // Simulated API call - replace with actual backend call
       try {
         const formData = new FormData();
-        formData.append('pdf', selectedFile);
-        console.log("Hi "+await extractTextFromPDF(selectedFile))
+        formData.append('data', selectedFile);
+        const res = await axios.post(`${backendURL}/gemini/summary`,formData)
+        console.log(res.data.data.data)
         // const response = await fetch('/api/summarize', {
         //   method: 'POST',
         //   body: formData
         // });
         // const data = await response.json();
-        // setSummary(data.summary);
+        setSummary(res.data.data.data);
 
         // Simulated response
-        setTimeout(() => {
-          setSummary("This is a sample summary of the uploaded document. Replace this with actual API.");
-          setLoading(false);
-        }, 2000);
+        setLoading(false);
       } catch (error) {
         console.error('Error:', error);
         setLoading(false);
@@ -80,10 +62,6 @@ export default function Summaries() {
     }
   };
 
-  // const generateText=({str,itemIndex})=>{
-  //   // str.replace(/ipsum/g, value => `<mark>${value}</mark>`)
-  //   console.log(str)
-  // }
 
   return (
     <div className="py-10">
@@ -152,7 +130,9 @@ export default function Summaries() {
                 <div className="border rounded-lg p-4">
                   <h3 className="text-lg font-semibold mb-3">Summary</h3>
                   <div className="prose max-w-none">
+                    <Markdown>
                     {summary}
+                    </Markdown>
                   </div>
                 </div>
               </div>

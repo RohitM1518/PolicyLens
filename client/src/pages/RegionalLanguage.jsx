@@ -1,16 +1,20 @@
+import axios from 'axios';
 import { useState } from 'react';
+import { useSelector } from 'react-redux';
+import Markdown from 'react-markdown'
+
 
 const languages = [
-  { code: 'hi', name: 'Hindi' },
-  { code: 'bn', name: 'Bengali' },
-  { code: 'te', name: 'Telugu' },
-  { code: 'ta', name: 'Tamil' },
-  { code: 'mr', name: 'Marathi' },
-  { code: 'gu', name: 'Gujarati' },
-  { code: 'kn', name: 'Kannada' },
-  { code: 'ml', name: 'Malayalam' },
-  { code: 'pa', name: 'Punjabi' },
-  { code: 'ur', name: 'Urdu' },
+  { code: 'Hindi', name: 'Hindi' },
+  { code: 'Bengali', name: 'Bengali' },
+  { code: 'Telugu', name: 'Telugu' },
+  { code: 'Tamil', name: 'Tamil' },
+  { code: 'Marathi', name: 'Marathi' },
+  { code: 'Gujarati', name: 'Gujarati' },
+  { code: 'Kannada', name: 'Kannada' },
+  { code: 'Malayalam', name: 'Malayalam' },
+  { code: 'Punjabi', name: 'Punjabi' },
+  { code: 'Urdu', name: 'Urdu' },
 ];
 
 export default function RegionalLanguage() {
@@ -18,31 +22,18 @@ export default function RegionalLanguage() {
   const [selectedLanguage, setSelectedLanguage] = useState('');
   const [translatedText, setTranslatedText] = useState('');
   const [loading, setLoading] = useState(false);
-
+  const backendURL = import.meta.env.VITE_BACKEND_URL;
+  // const accessToken = useSelector(state => state?.currentUser)
   const handleTranslate = async () => {
     if (!inputText || !selectedLanguage) return;
-
+    console.log(inputText + " " + selectedLanguage)
     setLoading(true);
     // Simulated API call - replace with actual backend call
     try {
-      // const response = await fetch('/api/translate', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify({
-      //     text: inputText,
-      //     targetLanguage: selectedLanguage,
-      //   }),
-      // });
-      // const data = await response.json();
-      // setTranslatedText(data.translatedText);
-
-      // Simulated response
-      setTimeout(() => {
-        setTranslatedText("This is a sample translated text. Replace with actual API response.");
-        setLoading(false);
-      }, 1000);
+      const res = await axios.post(`${backendURL}/gemini/regional/language`, { prompt: inputText, language: selectedLanguage })
+      console.log(res.data.data.data)
+      setTranslatedText(res.data.data.data);
+      setLoading(false);
     } catch (error) {
       console.error('Error:', error);
       setLoading(false);
@@ -106,7 +97,11 @@ export default function RegionalLanguage() {
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                     </div>
                   ) : (
-                    <p className="whitespace-pre-wrap">{translatedText}</p>
+                    <p className="whitespace-pre-wrap">
+                      <Markdown>
+                        {translatedText}
+                      </Markdown>
+                    </p>
                   )}
                 </div>
               </div>

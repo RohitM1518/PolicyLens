@@ -7,6 +7,7 @@ export default function ChatBot() {
           <p className="mt-2 text-lg leading-8 text-gray-600">
             Get instant answers to your policy-related questions
           </p>
+          <h1 className=" text-7xl mb-7 font-semibold opacity-10">Comming Soon</h1>
         </div>
       </div>
     </div>
