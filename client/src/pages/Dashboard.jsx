@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
+import axios from 'axios';
+import { useSelector } from 'react-redux';
 
 const insuranceTypes = [
     'Life Insurance',
@@ -18,6 +20,9 @@ export default function Dashboard() {
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const [sortField, setSortField] = useState(null);
+    const backendURL = import.meta.env.VITE_BACKEND_URL
+    const accessToken= useSelector((state) => state?.currentUser?.accessToken);
+    console.log(backendURL + "HI")
     const [sortDirection, setSortDirection] = useState('asc');
     const [formData, setFormData] = useState({
         type: '',
@@ -50,16 +55,40 @@ export default function Dashboard() {
         }
     });
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (editingId) {
-            setInsurances(insurances.map(ins =>
-                ins.id === editingId ? { ...formData, id: editingId } : ins
-            ));
+            try {
+                const res=await axios.put(`${backendURL}/insurance/${editingId}`, formData,
+                    {
+                        withCredentials: true,
+                        headers: {
+                            'Authorization': `Bearer ${accessToken}`
+                        }
+                    }
+                )
+                console.log(res)
+            } catch (error) {
+                console.log(error)
+            }
             setEditingId(null);
         } else {
-            setInsurances([...insurances, { ...formData, id: Date.now() }]);
+            try {
+                const res=await axios.post(`${backendURL}/insurance`, formData,
+                    {
+                        withCredentials: true,
+                        headers: {
+                            'Authorization': `Bearer ${accessToken}`
+                        }
+                    }
+                )
+                console.log(res.data.data)
+                setInsurances([...insurances,res.data.data])
+            } catch (error) {
+                console.log(error)
+            }
         }
+        
         setFormData({
             type: '',
             premium: '',
@@ -71,14 +100,49 @@ export default function Dashboard() {
         setShowForm(false);
     };
 
+
+    useEffect(()=>{
+        const fetchInsurances = async()=>{
+            try {
+                const res = await axios.get(`${backendURL}/insurance`,{
+                    withCredentials:true,
+                    headers:{
+                        'Authorization': `Bearer ${accessToken}`
+                    }
+                })
+                console.log(res?.data?.data)
+                setInsurances(res?.data?.data)
+            } catch (error) {
+                console.log(error)
+            }
+        }
+        fetchInsurances()
+    },[])
+    
+    
+
     const handleEdit = (insurance) => {
+        // console.log(insurance)
         setFormData(insurance);
-        setEditingId(insurance.id);
+        setEditingId(insurance._id);
         setShowForm(true);
     };
 
-    const handleDelete = (id) => {
-        setInsurances(insurances.filter(ins => ins.id !== id));
+    const handleDelete = async(id) => {
+        setInsurances(insurances.filter(ins => ins?._id !== id));
+        try {
+            const res=await axios.delete(`${backendURL}/insurance/${id}`,
+                {
+                    withCredentials: true,
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`
+                    }
+                }
+            )
+            console.log(res)
+        } catch (error) {
+            console.log(error)
+        }
     };
 
     return (
@@ -234,7 +298,7 @@ export default function Dashboard() {
                                                         Edit
                                                     </button>
                                                     <button
-                                                        onClick={() => handleDelete(insurance.id)}
+                                                        onClick={() => handleDelete(insurance._id)}
                                                         className="text-red-600 hover:text-red-900"
                                                     >
                                                         Delete
