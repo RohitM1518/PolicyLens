@@ -6,6 +6,8 @@ import geminiRoutes from './routes/geminiRoutes.js'
 // import { httpError } from './utils/httpError.js'
 // import { configGemini } from './controllers/geminiController.js'
 import dotenv from 'dotenv'
+import insuranceRoutes from './routes/insuranceRoutes.js';
+
 
 dotenv.config({
     path:'./.env'
@@ -34,6 +36,7 @@ app.use(cookieParser());
 // Routes
 app.use('/api/v1/user', userRoutes);
 app.use('/api/v1/gemini', geminiRoutes);
+app.use('/api/v1/insurance', insuranceRoutes);
 
 // 404 Error handler
 app.use((req, _, next) => {
