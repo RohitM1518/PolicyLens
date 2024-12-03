@@ -4,7 +4,7 @@ import { upload } from "../middlewares/multerMiddleware.js";
 
 const router = Router();
 router.post('/regional/language', getResponse);
-router.post('/chat', chatBot);
+// router.post('/chat', chatBot);
 router.post('/summary',upload.fields([
     {
         name:'data',

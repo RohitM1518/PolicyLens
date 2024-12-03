@@ -5,18 +5,19 @@ import { Message } from "../models/messageModel.js";
 import mongoose from "mongoose";
 import APIError from "../utils/apiError.js";
 import APIResponse from "../utils/apiResponse.js";
+import { createNewChat } from "./chatController.js";
 
 const createMessage = asyncHandler(async (req, res) => {
     const { message } = req.body;
-    const { chatid } = req.params;
+    let { chatid } = req.params;
     console.log(message);
     if (!message) {
         throw new APIError(400, "Message is required");
     }
     if(!chatid){
-        throw new APIError(400, "Chat id is required");
+        chatid = await createNewChat(message)
     }
-    const chat = await Chat.findById(chatid);
+    const chat = await Chat.findById(chatid,req.user._id);
     if(!chat){
         throw new APIError(404, "Chat not found");
     }

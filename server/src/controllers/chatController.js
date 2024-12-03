@@ -4,20 +4,19 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import APIResponse from "../utils/apiResponse.js";
 import APIError from "../utils/apiError.js";
 
-const createNewChat = asyncHandler(async (req, res) => {
-    const { prompt } = req.body;
+const createNewChat =async (prompt,userid) => {
     const newPrompt = prompt + " Generate a title for this chat";
     const title = await model.generateContent(newPrompt);
     const chat = await Chat.create(
         {
             title: title.response.text(),
-            owner: req.user._id
+            owner: userid
         });
     if(!chat){
         throw new APIError(500, "Chat could not be created");
     }
-    return res.status(200).json(new APIResponse(200, { chat }, "Chat created successfully"));
-})
+    return chat._id;
+}
 
 const deleteChat = asyncHandler(async (req, res) => {
     const { id } = req.params;
