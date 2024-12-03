@@ -3,7 +3,7 @@ import APIError from "../utils/apiError.js";
 import APIResponse from "../utils/apiResponse.js";
 import { model, fileManager } from "../config/geminiConfig.js";
 import fs from 'fs' //This is the file system from the node js
-
+import axios from 'axios';
 
 
 const getResponse = asyncHandler(async (req, res) => {
@@ -49,19 +49,22 @@ const generateSummary = asyncHandler(async (req, res) => {
     return res.status(200).json(new APIResponse(200, { data: result.response.text() }, "Summary generated successfully"));
 })
 
-const chatBot = async (prompt) => {
+const chatBot = async (prompt,chatId,accessToken) => {
     // const { prompt } = req.body;
+    const messages = await axios.get(`${process.env.BACKEND_URL}/chat/message/get/${chatId}`,{
+        withCredentials:true,
+        headers:{
+            'Authorization':`Bearer ${accessToken}`
+        }
+    });
+    // console.log(messages.data.data);
+    const history = messages.data.data.map(msg => ({
+        role: msg.role,
+        parts: [{ text: msg.message.trim() }]
+    }));
+
     const chat = model.startChat({
-        history: [
-            {
-                role: "user",
-                parts: [{ text: "Hi My name is Rohan" }],
-            },
-            {
-                role: "model",
-                parts: [{ text: "Great to meet you. What would you like to know?" }],
-            },
-        ],
+        history: history
     });
     let result = await chat.sendMessage(prompt);
     return result.response.text();

@@ -18,6 +18,7 @@ export const authUserMiddleware = asyncHandler(async (req, res, next) => {
             throw new APIError(401, "Invalid access token");
         }
         req.user = user;
+        req.accessToken = token;
         next()
     } catch (error) {
         throw new APIError(401, error?.message || "Unauthorized request");

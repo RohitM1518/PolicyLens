@@ -3,9 +3,9 @@ import { Chat } from "../models/chatModel.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import APIResponse from "../utils/apiResponse.js";
 import APIError from "../utils/apiError.js";
-
+import mongoose from "mongoose";
 const createNewChat =async (prompt,userid) => {
-    const newPrompt = prompt + " Generate a title for this chat";
+    const newPrompt = prompt + " Generate a exact one title for this chat without any extra information";
     const title = await model.generateContent(newPrompt);
     const chat = await Chat.create(
         {
@@ -43,8 +43,16 @@ const getChat = asyncHandler(async (req, res) => {
     return res.status(200).json(new APIResponse(200, { chat }, "Chat retrieved successfully"));
 })
 
+const getUserChats = asyncHandler(async (req, res) => {
+    console.log("HI "+req.user._id)
+    const chats = await Chat.find({owner: new mongoose.Types.ObjectId(req.user._id)});
+    return res.status(200).json(new APIResponse(200, { chats }, "Chats retrieved successfully"));
+})
+
+
 export{
     createNewChat,
     deleteChat,
-    getChat
+    getChat,
+    getUserChats
 }
