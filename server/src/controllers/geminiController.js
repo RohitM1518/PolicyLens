@@ -20,7 +20,7 @@ const getResponse = asyncHandler(async (req, res) => {
 });
 
 const generateSummary = asyncHandler(async (req, res) => {
-    const fileName=req.body.fileName;
+    const fileName = req.body.fileName;
     console.log(fileName)
     const uploadResponse = await fileManager.uploadFile(`./public/temp/${fileName}`, {
         mimeType: "application/pdf",
@@ -48,7 +48,27 @@ const generateSummary = asyncHandler(async (req, res) => {
     fs.unlinkSync(`./public/temp/${fileName}`);
     return res.status(200).json(new APIResponse(200, { data: result.response.text() }, "Summary generated successfully"));
 })
+
+const chatBot = async (prompt) => {
+    // const { prompt } = req.body;
+    const chat = model.startChat({
+        history: [
+            {
+                role: "user",
+                parts: [{ text: "Hi My name is Rohan" }],
+            },
+            {
+                role: "model",
+                parts: [{ text: "Great to meet you. What would you like to know?" }],
+            },
+        ],
+    });
+    let result = await chat.sendMessage(prompt);
+    return result.response.text();
+    // return res.status(200).json(new APIResponse(200, { data: result.response.text() }, "Response generated successfully"));
+}
 export {
     getResponse,
-    generateSummary
+    generateSummary,
+    chatBot
 }

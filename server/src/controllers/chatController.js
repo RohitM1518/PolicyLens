@@ -32,7 +32,20 @@ const deleteChat = asyncHandler(async (req, res) => {
     return res.status(200).json(new APIResponse(200, {}, "Chat deleted successfully"));
 })
 
+const getChat = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    if(!id){
+        throw new APIError(400, "Chat id is required");
+    }
+    const chat = await Chat.findById(id);
+    if(!chat){
+        throw new APIError(404, "Chat not found");
+    }
+    return res.status(200).json(new APIResponse(200, { chat }, "Chat retrieved successfully"));
+})
+
 export{
     createNewChat,
-    deleteChat
+    deleteChat,
+    getChat
 }
