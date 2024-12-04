@@ -36,6 +36,7 @@ const chatMessageCommonAggregation = () => {
 const createMessage = asyncHandler(async (req, res) => {
     const { message } = req.body;
     const accessToken = req?.accessToken;
+    console.log(accessToken);
     let { chatid } = req.params;
     // console.log(message);
     if (!message) {
