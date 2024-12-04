@@ -44,8 +44,8 @@ const getChat = asyncHandler(async (req, res) => {
 })
 
 const getUserChats = asyncHandler(async (req, res) => {
-    console.log("HI "+req.user._id)
-    const chats = await Chat.find({owner: new mongoose.Types.ObjectId(req.user._id)});
+    // console.log("HI "+req.user._id)
+    const chats = await Chat.find({owner: new mongoose.Types.ObjectId(req.user._id)}).sort({createdAt: -1});
     return res.status(200).json(new APIResponse(200, { chats }, "Chats retrieved successfully"));
 })
 

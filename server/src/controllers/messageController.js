@@ -45,7 +45,7 @@ const createMessage = asyncHandler(async (req, res) => {
     if(!chatid){
         chatid = await createNewChat(message,req.user._id);
     }
-    const chat = await Chat.findById(chatid,req.user._id);
+    const chat = await Chat.findById(chatid);
     if(!chat){
         throw new APIError(404, "Chat not found");
     }
@@ -57,6 +57,9 @@ const createMessage = asyncHandler(async (req, res) => {
     if(!newMessage){
         throw new APIError(500, "Message could not be created");
     }
+    chat.lastMessage= newMessage.message;
+    chat.save();
+
     const responseMessage = await chatBot(message,chatid,accessToken);
     // console.log(responseMessage);
     const newBotMessage = await Message.create({
@@ -67,7 +70,7 @@ const createMessage = asyncHandler(async (req, res) => {
     if(!newBotMessage){
         throw new APIError(500, "Message could not be created");
     }
-    return res.status(200).json(new APIResponse(200, { newMessage, newBotMessage }, "Message created successfully"));
+    return res.status(200).json(new APIResponse(200, { chat,newMessage, newBotMessage }, "Message created successfully"));
 })
 
 const getAllMessages = asyncHandler(async (req, res) => {

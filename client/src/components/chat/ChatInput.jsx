@@ -9,7 +9,7 @@ export default function ChatInput({ onSendMessage }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (message.trim() || files.length > 0) {
-      onSendMessage({ content: message, files });
+      onSendMessage({ message: message, files });
       setMessage('');
       setFiles([]);
     }
@@ -65,7 +65,7 @@ export default function ChatInput({ onSendMessage }) {
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           placeholder="Type your message..."
-          className="flex-grow rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
+          className="flex-grow rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-0 outline-none"
         />
         
         <button

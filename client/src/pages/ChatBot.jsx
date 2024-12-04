@@ -42,9 +42,6 @@ export default function ChatBot() {
       // Fetch messages for active chat
       const fetchMessages = async () => {
         try {
-          // const response = await fetch(`/api/chats/${activeChat.id}/messages`);
-          // const data = await response.json();
-          // setMessages(data);
           const res = await axios.get(`${backendURL}/chat/message/get/${activeChat._id}`,
             {
               withCredentials:true,
@@ -66,31 +63,53 @@ export default function ChatBot() {
   }, [activeChat]);
 
   const handleNewChat = () => {
-    const newChat = {
-      id: Date.now(),
-      title: 'New Conversation',
-      lastMessage: '',
-      timestamp: new Date().toISOString(),
-    };
-    setChats([newChat, ...chats]);
-    setActiveChat(newChat);
-    setMessages([]);
+    // const newChat = {
+    //   id: Date.now(),
+    //   title: 'New Conversation',
+    //   lastMessage: '',
+    //   timestamp: new Date().toISOString(),
+    // };
+    // setChats([newChat, ...chats]);
+    // setActiveChat(newChat);
+    // setMessages([]);
+    setActiveChat(null); 
   };
 
   const handleSendMessage = async (message) => {
-    if (!activeChat) return;
-
-    // Add user message
+    if(!message) return;
     const userMessage = {
       id: Date.now(),
       ...message,
-      timestamp: new Date().toISOString(),
-      isUser: true,
+      createdAt: new Date().toISOString(),
+      role: "user",
     };
     setMessages([...messages, userMessage]);
 
+    if (!activeChat){
+      try {
+        // console.log(accessToken)
+        const res = await axios.post(`${backendURL}/chat/message/create`,{message:userMessage.message},
+          {
+            withCredentials:true,
+            headers: {
+              'Authorization': `Bearer ${accessToken}`
+            }
+          }
+      )
+      // console.log(res.data.data)
+      setChats(prev => [res.data.data.chat,...prev])
+      setActiveChat(res.data.data.chat)
+      setMessages(prev => [...prev, res.data.data.newBotMessage]);
+  
+      } catch (error) {
+        console.error('Error sending message:', error);
+      }
+    }
+    
+
     try {
-      const res = await axios.post(`${backendURL}/chat/message/create/${activeChat._id}`,
+      console.log(accessToken)
+      const res = await axios.post(`${backendURL}/chat/message/create/${activeChat._id}`,{message:userMessage.message},
         {
           withCredentials:true,
           headers: {
@@ -99,27 +118,8 @@ export default function ChatBot() {
         }
     )
     console.log(res.data.data)
-      // const data = await response.json();
-      
-      // Simulated API response
-      setTimeout(() => {
-        const aiMessage = {
-          id: Date.now() + 1,
-          content: 'Thank you for your message. I understand you\'re asking about insurance. How can I help you today?',
-          timestamp: new Date().toISOString(),
-          isUser: false,
-        };
-        setMessages(prev => [...prev, aiMessage]);
-        
-        // Update chat list
-        setChats(prevChats =>
-          prevChats.map(chat =>
-            chat.id === activeChat.id
-              ? { ...chat, lastMessage: message.content, timestamp: new Date().toISOString() }
-              : chat
-          )
-        );
-      }, 1000);
+    setMessages(prev => [...prev, res.data.data.newBotMessage]);
+
     } catch (error) {
       console.error('Error sending message:', error);
     }
@@ -157,8 +157,11 @@ export default function ChatBot() {
             <ChatInput onSendMessage={handleSendMessage} />
           </>
         ) : (
+          <div className="flex-grow flex flex-col">
           <div className="flex-grow flex items-center justify-center text-gray-500">
-            Select a chat or start a new conversation
+            Start New Chat
+          </div>
+            <ChatInput onSendMessage={handleSendMessage} />
           </div>
         )}
       </div>

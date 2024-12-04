@@ -9,6 +9,10 @@ const chatSchema = new Schema({
         type:Schema.Types.ObjectId,
         ref:"User"
     },
+    lastMessage:{
+        type:String,
+        default:""
+    }
 },{ timestamps:true})
 
 export const Chat = mongoose.model("Chat",chatSchema)

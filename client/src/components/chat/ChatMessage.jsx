@@ -1,7 +1,11 @@
 import { UserCircleIcon } from '@heroicons/react/24/solid';
 import { DocumentTextIcon } from '@heroicons/react/24/outline';
+import Markdown from 'react-markdown'
+import { useSelector } from 'react-redux';
 
 export default function ChatMessage({ message, isUser }) {
+  const user = useSelector(state => state?.currentUser?.user)
+  console.log(user)
   return (
     <div className={`flex gap-4 p-4 ${isUser ? 'bg-white' : 'bg-gray-50'}`}>
       <div className="flex-shrink-0">
@@ -16,11 +20,13 @@ export default function ChatMessage({ message, isUser }) {
       
       <div className="flex-grow">
         <div className="font-medium text-gray-900 mb-1">
-          {isUser ? 'You' : 'PolicyLens AI'}
+          {isUser ? user?.name : 'PolicyLens AI'}
         </div>
         
         <div className="text-gray-700 prose max-w-none">
+          <Markdown>
           {message.message}
+          </Markdown>
         </div>
         
         {message.files && message.files.length > 0 && (
