@@ -4,6 +4,33 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import APIResponse from "../utils/apiResponse.js";
 import APIError from "../utils/apiError.js";
 import mongoose from "mongoose";
+import { Message } from "../models/messageModel.js";
+
+const deleteCascadeChatMessage = async (chatId) => {
+
+    //This is for deleting the attachments from the local storage
+
+    // const messages = await Message.find({
+    //     chat: new mongoose.Types.ObjectId(chatId)
+    // })
+    // let attachments = []
+
+    // attachments = attachments.concat(
+    //     ...messages.map((message) => {
+    //         return message.attachments
+    //     })
+    // )
+
+    // attachments.forEach((attachment) => {
+    //     removeLocalFile(attachment.localPath)
+    // })
+
+    await Message.deleteMany({
+        chat: new mongoose.Types.ObjectId(chatId)
+    })
+
+}
+
 const createNewChat =async (prompt,userid) => {
     const newPrompt = prompt + " Generate a exact one title for this chat without any extra information";
     const title = await model.generateContent(newPrompt);
@@ -27,7 +54,7 @@ const deleteChat = asyncHandler(async (req, res) => {
         {
             _id: id
         });
-    
+    deleteCascadeChatMessage(id);
     return res.status(200).json(new APIResponse(200, {}, "Chat deleted successfully"));
 })
 

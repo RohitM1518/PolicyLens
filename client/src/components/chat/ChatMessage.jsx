@@ -1,11 +1,31 @@
 import { UserCircleIcon } from '@heroicons/react/24/solid';
 import { DocumentTextIcon } from '@heroicons/react/24/outline';
-import Markdown from 'react-markdown'
+import Markdown from 'react-markdown';
 import { useSelector } from 'react-redux';
 
-export default function ChatMessage({ message, isUser }) {
-  const user = useSelector(state => state?.currentUser?.user)
-  console.log(user)
+export default function ChatMessage({ message, isUser, isLoading }) {
+  const user = useSelector(state => state?.currentUser?.user);
+
+  if (isLoading) {
+    return (
+      <div className="flex gap-4 p-4 bg-gray-50">
+        <div className="flex-shrink-0">
+          <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
+            <span className="text-white font-semibold">AI</span>
+          </div>
+        </div>
+        <div className="flex-grow">
+          <div className="font-medium text-gray-900 mb-1">PolicyLens AI</div>
+          <div className="flex space-x-2">
+            <div className="h-3 w-3 bg-gray-300 rounded-full animate-bounce"></div>
+            <div className="h-3 w-3 bg-gray-300 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+            <div className="h-3 w-3 bg-gray-300 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`flex gap-4 p-4 ${isUser ? 'bg-white' : 'bg-gray-50'}`}>
       <div className="flex-shrink-0">
@@ -25,7 +45,7 @@ export default function ChatMessage({ message, isUser }) {
         
         <div className="text-gray-700 prose max-w-none">
           <Markdown>
-          {message.message}
+            {message.message}
           </Markdown>
         </div>
         

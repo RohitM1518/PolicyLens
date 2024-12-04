@@ -21,7 +21,7 @@ export default function ChatInput({ onSendMessage }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="border-t border-gray-200 p-4 bg-white">
+    <form onSubmit={handleSubmit} className="bg-white">
       {files.length > 0 && (
         <div className="mb-2 flex gap-2 flex-wrap">
           {files.map((file, index) => (
@@ -65,7 +65,7 @@ export default function ChatInput({ onSendMessage }) {
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           placeholder="Type your message..."
-          className="flex-grow rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-0 outline-none"
+          className="flex-grow rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-0 outline-none p-3"
         />
         
         <button
