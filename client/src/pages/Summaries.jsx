@@ -4,6 +4,8 @@ import axios from 'axios';
 import Markdown from 'react-markdown';
 import { ContentCopy, Download, Translate } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
+import { TrashIcon } from '@heroicons/react/24/outline';
+
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 const languages = [
@@ -30,11 +32,11 @@ export default function Summaries() {
   const [selectedLanguage, setSelectedLanguage] = useState('');
   const [translatedSummary, setTranslatedSummary] = useState('');
   const [translating, setTranslating] = useState(false);
+  const [loadingSummaries, setLoadingSummaries] = useState(true);
   const backendURL = import.meta.env.VITE_BACKEND_URL;
   const accessToken = useSelector((state) => state?.currentUser?.accessToken);
 
   useEffect(() => {
-    // Fetch previous summaries
     const fetchSummaries = async () => {
       try {
         const response = await axios.get(`${backendURL}/summary/get/all`, {
@@ -43,10 +45,11 @@ export default function Summaries() {
             'Authorization': `Bearer ${accessToken}`
           }
         });
-        console.log(response.data.data)
         setPreviousSummaries(response.data.data.summaries);
       } catch (error) {
         console.error('Error fetching summaries:', error);
+      } finally {
+        setLoadingSummaries(false);
       }
     };
     fetchSummaries();
@@ -66,22 +69,22 @@ export default function Summaries() {
   const handleFileChange = async (event) => {
     const selectedFile = event.target.files[0];
     setFile(selectedFile);
-    setSelectedLanguage('')
-    setTranslatedSummary('')
+    setSelectedLanguage('');
+    setTranslatedSummary('');
+    
     if (selectedFile) {
       setLoading(true);
       try {
         const formData = new FormData();
         formData.append('PolicyPdf', selectedFile);
-        const res = await axios.post(`${backendURL}/summary/create`, formData,
-          {
-            withCredentials: true,
-            headers: {
-              'Authorization': `Bearer ${accessToken}`
-            }
+        const res = await axios.post(`${backendURL}/summary/create`, formData, {
+          withCredentials: true,
+          headers: {
+            'Authorization': `Bearer ${accessToken}`
           }
-        );
+        });
         setSummary(res.data.data.summary);
+        setPreviousSummaries(prev => [res.data.data.summary, ...prev]);
       } catch (error) {
         console.error('Error:', error);
         setError('Error generating summary');
@@ -91,10 +94,30 @@ export default function Summaries() {
     }
   };
 
+  const handleDelete = async (id, e) => {
+    e.stopPropagation();
+    try {
+      await axios.delete(`${backendURL}/summary/delete/${id}`, {
+        withCredentials: true,
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+      setPreviousSummaries(prev => prev.filter(summary => summary._id !== id));
+      if (summary?._id === id) {
+        setSummary(null);
+        setFile(null);
+        setTranslatedSummary('');
+        setSelectedLanguage('');
+      }
+    } catch (error) {
+      console.error('Error deleting summary:', error);
+    }
+  };
+
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(summary.summarizedText);
-      // Show a toast or notification
     } catch (err) {
       console.error('Failed to copy text:', err);
     }
@@ -113,17 +136,16 @@ export default function Summaries() {
   const handleClick = (item) => {
     setFile(item.PolicyPdf);
     setSummary(item);
-    if(!item.translatedText){
-      setTranslatedSummary('')
-      setSelectedLanguage('')
-    }else{
+    if (!item.translatedText) {
+      setTranslatedSummary('');
+      setSelectedLanguage('');
+    } else {
       setTranslatedSummary(item?.translatedText.translatedText);
-      setSelectedLanguage(item?.translatedText.language)
+      setSelectedLanguage(item?.translatedText.language);
     }
-  }
+  };
 
   const handleTranslate = async () => {
-    console.log(translatedSummary)
     if (!selectedLanguage) return;
     setTranslating(true);
     try {
@@ -135,7 +157,6 @@ export default function Summaries() {
           'Authorization': `Bearer ${accessToken}`
         }
       });
-      console.log(response)
       setTranslatedSummary(response.data.data.summary.translatedText.translatedText);
     } catch (error) {
       console.error('Error translating:', error);
@@ -143,26 +164,37 @@ export default function Summaries() {
       setTranslating(false);
     }
   };
-
   return (
     <div className="py-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid md:grid-cols-4 gap-6">
-          {/* Sidebar with previous summaries */}
           <div className="md:col-span-1 bg-white rounded-lg shadow p-4">
             <h3 className="text-lg font-semibold mb-4">Previous Summaries</h3>
-            <div className="space-y-2">
-              {previousSummaries.map((item) => (
-                <button
-                  key={item._id}
-                  onClick={()=>{handleClick(item)}}
-                  className="w-full text-left p-2 hover:bg-gray-100 rounded font-semibold"
-                >
-                  {item.title}
-                  <div className=' bg-black h-[1px]'></div>
-                </button>
-              ))}
-            </div>
+            {loadingSummaries ? (
+              <div className="flex justify-center py-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {previousSummaries.map((item) => (
+                  <div key={item._id} className="relative group">
+                    <button
+                      onClick={() => handleClick(item)}
+                      className="w-full text-left p-2 hover:bg-gray-100 rounded font-semibold"
+                    >
+                      {item.title}
+                      <div className="bg-black h-[1px]"></div>
+                    </button>
+                    <button
+                      onClick={(e) => handleDelete(item._id, e)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1 hover:bg-red-100 rounded-full transition-opacity"
+                    >
+                      <TrashIcon className="h-4 w-4 text-red-600" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Main content */}

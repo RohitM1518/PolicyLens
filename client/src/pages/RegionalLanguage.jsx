@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
 import Markdown from 'react-markdown';
+import { TrashIcon } from '@heroicons/react/24/outline';
 
 const languages = [
   { code: 'Hindi', name: 'Hindi' },
@@ -23,30 +24,15 @@ export default function RegionalLanguage() {
   const [loading, setLoading] = useState(false);
   const [previousTranslations, setPreviousTranslations] = useState([]);
   const [selectedTranslation, setSelectedTranslation] = useState(null);
+  const [loadingTranslations, setLoadingTranslations] = useState(true);
   const backendURL = import.meta.env.VITE_BACKEND_URL;
   const accessToken = useSelector((state) => state?.currentUser?.accessToken);
 
   useEffect(() => {
-    // Fetch previous translations
-  //   setPreviousTranslations([
-  //     {
-  //     id:1,
-  //     originalText:"How to do this",
-  //     translatedText:"कैसे करें",
-  //     language:"Hindi"
-  //   },
-  //     {
-  //     id:2,
-  //     originalText:"How to do this",
-  //     translatedText:"कैसे करें",
-  //     language:"Hindi"
-  //   }
-
-  // ])
     const fetchTranslations = async () => {
       try {
-        const response = await axios.get(`${backendURL}/regional/language/get/all`,{
-          withCredentials:true,
+        const response = await axios.get(`${backendURL}/regional/language/get/all`, {
+          withCredentials: true,
           headers: {
             'Authorization': `Bearer ${accessToken}`,
           }
@@ -54,6 +40,8 @@ export default function RegionalLanguage() {
         setPreviousTranslations(response.data.data.data);
       } catch (error) {
         console.error('Error fetching translations:', error);
+      } finally {
+        setLoadingTranslations(false);
       }
     };
     fetchTranslations();
@@ -66,15 +54,14 @@ export default function RegionalLanguage() {
       const response = await axios.post(`${backendURL}/regional/language/convert`, {
         originalText: inputText,
         language: selectedLanguage
-      },{
-        withCredentials:true,
+      }, {
+        withCredentials: true,
         headers: {
           'Authorization': `Bearer ${accessToken}`,
         }
       });
-      console.log(response);
       setTranslatedText(response.data.data.data.translatedText);
-      setPreviousTranslations(prev => [response.data.data.data,...prev])
+      setPreviousTranslations(prev => [response.data.data.data, ...prev]);
       setSelectedTranslation(null);
     } catch (error) {
       console.error('Error:', error);
@@ -83,39 +70,72 @@ export default function RegionalLanguage() {
     }
   };
 
+  const handleDelete = async (id, e) => {
+    e.stopPropagation();
+    try {
+      await axios.delete(`${backendURL}/regional/language/delete/${id}`, {
+        withCredentials: true,
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        }
+      });
+      setPreviousTranslations(prev => prev.filter(translation => translation._id !== id));
+      if (selectedTranslation?._id === id) {
+        setSelectedTranslation(null);
+        setInputText('');
+        setTranslatedText('');
+        setSelectedLanguage('');
+      }
+    } catch (error) {
+      console.error('Error deleting translation:', error);
+    }
+  };
+
   return (
     <div className="py-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid md:grid-cols-4 gap-6">
-          {/* Sidebar with previous translations */}
           <div className="md:col-span-1 bg-white rounded-lg shadow p-4">
             <h3 className="text-lg font-semibold mb-4">Previous Translations</h3>
-            <div className="space-y-2">
-              {previousTranslations.map((translation) => (
-                <button
-                  key={translation._id}
-                  onClick={() => {
-                    setSelectedTranslation(translation);
-                    setInputText(translation.originalText);
-                    setSelectedLanguage(translation.language);
-                    setTranslatedText(translation.translatedText);
-                  }}
-                  className={`w-full text-left p-2 rounded ${
-                    selectedTranslation?._id === translation._id
-                      ? 'bg-primary text-white'
-                      : 'hover:bg-gray-100'
-                  }`}
-                >
-                  <p className=' font-bold'>{translation.title}</p>
-                  <p className="italic">{translation.language}</p>
-                  <p className="text-sm truncate">
-                    {selectedTranslation?._id === translation._id
-                      ? 'Selected'
-                      : translation.translatedText}
-                  </p>
-                </button>
-              ))}
-            </div>
+            {loadingTranslations ? (
+              <div className="flex justify-center py-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {previousTranslations.map((translation) => (
+                  <div key={translation._id} className="relative group">
+                    <button
+                      onClick={() => {
+                        setSelectedTranslation(translation);
+                        setInputText(translation.originalText);
+                        setSelectedLanguage(translation.language);
+                        setTranslatedText(translation.translatedText);
+                      }}
+                      className={`w-full text-left p-2 rounded ${
+                        selectedTranslation?._id === translation._id
+                          ? 'bg-primary text-white'
+                          : 'hover:bg-gray-100'
+                      }`}
+                    >
+                      <p className="font-bold">{translation.title}</p>
+                      <p className="italic">{translation.language}</p>
+                      <p className="text-sm truncate">
+                        {selectedTranslation?._id === translation._id
+                          ? 'Selected'
+                          : translation.translatedText}
+                      </p>
+                    </button>
+                    <button
+                      onClick={(e) => handleDelete(translation._id, e)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1 hover:bg-red-100 rounded-full transition-opacity"
+                    >
+                      <TrashIcon className="h-4 w-4 text-red-600" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Main content */}
