@@ -28,4 +28,12 @@ const getUserTranslations = asyncHandler(async (req, res) => {
     return res.status(200).json(new APIResponse(200, { data: translations }, "User translations fetched successfully"));
 })
 
-export { convertToRegionalLanguage, getUserTranslations };
+const deleteRegionalLanguage = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    if(!id){
+        throw new APIError(400, "Id is required");
+    }
+    const regionalLanguage = await RegionalLanguage.findByIdAndDelete(id);
+    return res.status(200).json(new APIResponse(200, { data: regionalLanguage }, "Regional language deleted successfully"));
+})
+export { convertToRegionalLanguage, getUserTranslations,deleteRegionalLanguage };

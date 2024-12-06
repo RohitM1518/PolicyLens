@@ -56,6 +56,9 @@ const translateSummary = asyncHandler(async(req,res)=>{
     if(!summary){
         throw new APIError(404, "Summary not found");
     }
+    if(summary.translatedText){
+        await RegionalLanguage.findByIdAndDelete(summary.translatedText._id);
+    }
     const translatedText = await getResponse(summary.summarizedText, language);
     if(!translatedText){
         throw new APIError("Failed to translate text", 400);
@@ -80,8 +83,22 @@ const translateSummary = asyncHandler(async(req,res)=>{
     return res.status(200).json(new APIResponse(200, {summary:resSummary}, "Summary translated successfully"));
 })
 
+
+const deleteSummary = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    if(!id){
+        throw new APIError(400, "Id is required");
+    }
+    const summary = await Summary.findByIdAndDelete(id);
+    if(summary.translatedText){
+        await RegionalLanguage.findById(summary.translatedText._id).deleteOne();
+    }
+    return res.status(200).json(new APIResponse(200, { data: summary }, "Summary deleted successfully"));
+})
+
 export{
     createSummary,
     getAllSummaries,
-    translateSummary
+    translateSummary,
+    deleteSummary
 }

@@ -95,7 +95,7 @@ export default function RegionalLanguage() {
     <div className="py-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid md:grid-cols-4 gap-6">
-          <div className="md:col-span-1 bg-white rounded-lg shadow p-4">
+          <div className="md:col-span-1 bg-white rounded-lg shadow p-4 max-h-max">
             <h3 className="text-lg font-semibold mb-4">Previous Translations</h3>
             {loadingTranslations ? (
               <div className="flex justify-center py-4">
@@ -107,6 +107,7 @@ export default function RegionalLanguage() {
                   <div key={translation._id} className="relative group">
                     <button
                       onClick={() => {
+                        console.log(translation)
                         setSelectedTranslation(translation);
                         setInputText(translation.originalText);
                         setSelectedLanguage(translation.language);
@@ -116,7 +117,7 @@ export default function RegionalLanguage() {
                         selectedTranslation?._id === translation._id
                           ? 'bg-primary text-white'
                           : 'hover:bg-gray-100'
-                      }`}
+                      } border border-slate-200`}
                     >
                       <p className="font-bold">{translation.title}</p>
                       <p className="italic">{translation.language}</p>
@@ -152,7 +153,7 @@ export default function RegionalLanguage() {
                     <select
                       value={selectedLanguage}
                       onChange={(e) => setSelectedLanguage(e.target.value)}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
+                      className="mt-1 p-2 outline-none block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
                     >
                       <option value="">Select language</option>
                       {languages.map((lang) => (
@@ -170,8 +171,8 @@ export default function RegionalLanguage() {
                     <textarea
                       value={inputText}
                       onChange={(e) => setInputText(e.target.value)}
-                      rows={4}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
+                      rows={8}
+                      className="mt-1 outline-none block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
                       placeholder="Enter text to translate..."
                     />
                   </div>

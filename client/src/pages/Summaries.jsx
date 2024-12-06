@@ -5,6 +5,7 @@ import Markdown from 'react-markdown';
 import { ContentCopy, Download, Translate } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 import { TrashIcon } from '@heroicons/react/24/outline';
+import { generatePDF } from '../utils/pdfGenerator';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
@@ -124,13 +125,14 @@ export default function Summaries() {
   };
 
   const handleDownload = () => {
-    const element = document.createElement('a');
-    const file = new Blob([summary.summarizedText], { type: 'text/plain' });
-    element.href = URL.createObjectURL(file);
-    element.download = 'summary.txt';
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
+    if (!summary?.summarizedText) return;
+    
+    const doc = generatePDF(
+      summary.summarizedText,
+      summary.title || 'Policy Summary'
+    );
+    
+    doc.save(`${summary.title || 'policy-summary'}.pdf`);
   };
 
   const handleClick = (item) => {
@@ -168,7 +170,7 @@ export default function Summaries() {
     <div className="py-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid md:grid-cols-4 gap-6">
-          <div className="md:col-span-1 bg-white rounded-lg shadow p-4">
+          <div className="md:col-span-1 bg-white rounded-lg shadow p-4 max-h-max">
             <h3 className="text-lg font-semibold mb-4">Previous Summaries</h3>
             {loadingSummaries ? (
               <div className="flex justify-center py-4">
@@ -180,10 +182,9 @@ export default function Summaries() {
                   <div key={item._id} className="relative group">
                     <button
                       onClick={() => handleClick(item)}
-                      className="w-full text-left p-2 hover:bg-gray-100 rounded font-semibold"
+                      className="w-full text-left p-2 hover:bg-gray-100 rounded font-semibold border border-slate-200"
                     >
                       {item.title}
-                      <div className="bg-black h-[1px]"></div>
                     </button>
                     <button
                       onClick={(e) => handleDelete(item._id, e)}
@@ -286,7 +287,7 @@ export default function Summaries() {
                       <select
                         value={selectedLanguage}
                         onChange={(e) => setSelectedLanguage(e.target.value)}
-                        className="rounded-md border-gray-300"
+                        className="rounded-md border-gray-300 outline-none p-2 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
                       >
                         <option value="">Select language</option>
                         {languages.map((lang) => (
