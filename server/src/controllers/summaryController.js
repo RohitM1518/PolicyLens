@@ -72,12 +72,12 @@ const translateSummary = asyncHandler(async(req,res)=>{
         throw new APIError(500, "Failed to create regional language");
     }
     summary.translatedText = regionalLanguage._id;
-    summary.save();
+    await summary.save();
 
     //TODO: Optimise this later
     const resSummary = await Summary.findById(id).populate('translatedText');
     
-    return res.status(200).json(new APIResponse(200, {resSummary}, "Summary translated successfully"));
+    return res.status(200).json(new APIResponse(200, {summary:resSummary}, "Summary translated successfully"));
 })
 
 export{

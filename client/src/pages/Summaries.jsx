@@ -21,7 +21,7 @@ const languages = [
 
 export default function Summaries() {
   const [file, setFile] = useState(null);
-  const [summary, setSummary] = useState('');
+  const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(false);
   const [numPages, setNumPages] = useState(null);
   const [pageNumber, setPageNumber] = useState(1);
@@ -37,9 +37,9 @@ export default function Summaries() {
     // Fetch previous summaries
     const fetchSummaries = async () => {
       try {
-        const response = await axios.get(`${backendURL}/summary/get/all`,{
-          withCredentials:true,
-          headers:{
+        const response = await axios.get(`${backendURL}/summary/get/all`, {
+          withCredentials: true,
+          headers: {
             'Authorization': `Bearer ${accessToken}`
           }
         });
@@ -66,7 +66,8 @@ export default function Summaries() {
   const handleFileChange = async (event) => {
     const selectedFile = event.target.files[0];
     setFile(selectedFile);
-
+    setSelectedLanguage('')
+    setTranslatedSummary('')
     if (selectedFile) {
       setLoading(true);
       try {
@@ -74,13 +75,13 @@ export default function Summaries() {
         formData.append('PolicyPdf', selectedFile);
         const res = await axios.post(`${backendURL}/summary/create`, formData,
           {
-            withCredentials:true,
-            headers:{
+            withCredentials: true,
+            headers: {
               'Authorization': `Bearer ${accessToken}`
             }
           }
         );
-        setSummary(res.data.data.summary.summarizedText);
+        setSummary(res.data.data.summary);
       } catch (error) {
         console.error('Error:', error);
         setError('Error generating summary');
@@ -92,7 +93,7 @@ export default function Summaries() {
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(summary);
+      await navigator.clipboard.writeText(summary.summarizedText);
       // Show a toast or notification
     } catch (err) {
       console.error('Failed to copy text:', err);
@@ -101,7 +102,7 @@ export default function Summaries() {
 
   const handleDownload = () => {
     const element = document.createElement('a');
-    const file = new Blob([summary], { type: 'text/plain' });
+    const file = new Blob([summary.summarizedText], { type: 'text/plain' });
     element.href = URL.createObjectURL(file);
     element.download = 'summary.txt';
     document.body.appendChild(element);
@@ -109,15 +110,33 @@ export default function Summaries() {
     document.body.removeChild(element);
   };
 
+  const handleClick = (item) => {
+    setFile(item.PolicyPdf);
+    setSummary(item);
+    if(!item.translatedText){
+      setTranslatedSummary('')
+      setSelectedLanguage('')
+    }else{
+      setTranslatedSummary(item?.translatedText.translatedText);
+      setSelectedLanguage(item?.translatedText.language)
+    }
+  }
+
   const handleTranslate = async () => {
+    console.log(translatedSummary)
     if (!selectedLanguage) return;
     setTranslating(true);
     try {
-      const response = await axios.post(`${backendURL}/summary/translate`, {
+      const response = await axios.post(`${backendURL}/summary/translate/${summary?._id}`, {
         language: selectedLanguage
+      }, {
+        withCredentials: true,
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
       });
       console.log(response)
-      setTranslatedSummary(response.data.data.summary);
+      setTranslatedSummary(response.data.data.summary.translatedText.translatedText);
     } catch (error) {
       console.error('Error translating:', error);
     } finally {
@@ -136,15 +155,11 @@ export default function Summaries() {
               {previousSummaries.map((item) => (
                 <button
                   key={item._id}
-                  onClick={() => {
-                    setFile(item.PolicyPdf);
-                    setSummary(item.summarizedText);
-                    setTranslatedSummary(item?.translatedText.translatedText);
-                    setSelectedLanguage(item?.translatedText.language)
-                  }}
-                  className="w-full text-left p-2 hover:bg-gray-100 rounded"
+                  onClick={()=>{handleClick(item)}}
+                  className="w-full text-left p-2 hover:bg-gray-100 rounded font-semibold"
                 >
                   {item.title}
+                  <div className=' bg-black h-[1px]'></div>
                 </button>
               ))}
             </div>
@@ -190,7 +205,7 @@ export default function Summaries() {
                     >
                       <Page pageNumber={pageNumber} width={500} renderTextLayer={false} />
                     </Document>
-                    {error && <p className="text-red-500">{error}</p>}
+                    {/* {error && <p className="text-red-500">{error}</p>} */}
                     <div className="flex justify-between mt-4">
                       <button
                         disabled={pageNumber <= 1}
@@ -232,7 +247,7 @@ export default function Summaries() {
                     </div>
 
                     <div className="prose max-w-none mb-4">
-                      <Markdown>{summary}</Markdown>
+                      <Markdown>{summary.summarizedText}</Markdown>
                     </div>
 
                     <div className="flex gap-4 items-center mt-4">
