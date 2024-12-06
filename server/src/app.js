@@ -9,7 +9,8 @@ import dotenv from 'dotenv'
 import insuranceRoutes from './routes/insuranceRoutes.js';
 import chatRoutes from './routes/chatRoutes.js'
 import messageRoutes from './routes/messageRoutes.js'
-
+import regionalLanguageRoutes from './routes/regionalLanguageRoutes.js'
+import summaryRoutes from './routes/summaryRoutes.js'
 
 dotenv.config({
     path:'./.env'
@@ -41,6 +42,8 @@ app.use('/api/v1/gemini', geminiRoutes);
 app.use('/api/v1/insurance', insuranceRoutes);
 app.use('/api/v1/chat', chatRoutes);
 app.use('/api/v1/chat/message', messageRoutes);
+app.use('/api/v1/regional/language', regionalLanguageRoutes);
+app.use('/api/v1/summary', summaryRoutes);
 
 // 404 Error handler
 app.use((req, _, next) => {

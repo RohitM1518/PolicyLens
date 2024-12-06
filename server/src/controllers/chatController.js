@@ -5,6 +5,7 @@ import APIResponse from "../utils/apiResponse.js";
 import APIError from "../utils/apiError.js";
 import mongoose from "mongoose";
 import { Message } from "../models/messageModel.js";
+import { generateTitle } from "./geminiController.js";
 
 const deleteCascadeChatMessage = async (chatId) => {
 
@@ -32,11 +33,11 @@ const deleteCascadeChatMessage = async (chatId) => {
 }
 
 const createNewChat =async (prompt,userid) => {
-    const newPrompt = prompt + " Generate a exact one title for this chat without any extra information";
-    const title = await model.generateContent(newPrompt);
+
+    const title = await generateTitle(prompt);
     const chat = await Chat.create(
         {
-            title: title.response.text(),
+            title: title,
             owner: userid
         });
     if(!chat){

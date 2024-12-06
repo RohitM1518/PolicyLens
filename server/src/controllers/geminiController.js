@@ -6,21 +6,29 @@ import fs from 'fs' //This is the file system from the node js
 import axios from 'axios';
 
 
-const getResponse = asyncHandler(async (req, res) => {
-    const { prompt, language } = req.body;
+const getResponse = async (prompt,language) => {
     // console.log(prompt);
     const newPrompt = `${prompt}+\nConvert above into ${language} and do not give any extra information`;
     try {
         const result = await model.generateContent(newPrompt);
         console.log(result.response.text());
-        return res.status(200).json(new APIResponse(200, { data: result.response.text() }, "Response generated successfully"));
+        return result.response.text();
     } catch (error) {
-        throw new APIError(500, error.message);
+        console.log(error);
     }
-});
+}
 
-const generateSummary = asyncHandler(async (req, res) => {
-    const fileName = req.body.fileName;
+const generateTitle = async(prompt)=>{
+    try {
+        const newPrompt = prompt + " Generate a exact one title for this chat without any extra information";
+        const title = await model.generateContent(newPrompt);
+        return title.response.text();
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+const generateSummary = async (fileName) => {
     console.log(fileName)
     const uploadResponse = await fileManager.uploadFile(`./public/temp/${fileName}`, {
         mimeType: "application/pdf",
@@ -31,6 +39,7 @@ const generateSummary = asyncHandler(async (req, res) => {
     console.log(
         `Uploaded file ${uploadResponse.file.displayName} as: ${uploadResponse.file.uri}`,
     );
+    //TODO: Check instead of cloudinary can we use this
 
     // Generate content using text and the URI reference for the uploaded file.
     const result = await model.generateContent([
@@ -46,8 +55,8 @@ const generateSummary = asyncHandler(async (req, res) => {
     // Output the generated text to the console
     console.log(result.response.text());
     fs.unlinkSync(`./public/temp/${fileName}`);
-    return res.status(200).json(new APIResponse(200, { data: result.response.text() }, "Summary generated successfully"));
-})
+    return result.response.text();
+}
 
 const chatBot = async (prompt,chatId,accessToken) => {
     // const { prompt } = req.body;
@@ -73,5 +82,6 @@ const chatBot = async (prompt,chatId,accessToken) => {
 export {
     getResponse,
     generateSummary,
-    chatBot
+    chatBot,
+    generateTitle
 }
