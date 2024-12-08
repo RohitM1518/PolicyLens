@@ -29,12 +29,12 @@ function App() {
     <>
       <div className="flex flex-col min-h-screen">
         <Navbar />
-        {response && <div className="toast toast-bottom toast-start z-20">
+        {response && <div className="toast toast-bottom toast-start z-50">
           <div className="alert bg-green-400">
             <span>{response}</span>
           </div>
         </div>}
-        {error && <div className="toast toast-bottom toast-start z-20">
+        {error && <div className="toast toast-bottom toast-start z-50">
           <div className="alert bg-red-600 text-white">
             <span>{error}</span>
           </div>

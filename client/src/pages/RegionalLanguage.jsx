@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useSelector } from 'react-redux';
 import Markdown from 'react-markdown';
+import { useSelector } from 'react-redux';
 import { TrashIcon } from '@heroicons/react/24/outline';
+import { format } from 'date-fns';
 
 const languages = [
   { code: 'Hindi', name: 'Hindi' },
@@ -95,7 +96,8 @@ export default function RegionalLanguage() {
     <div className="py-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid md:grid-cols-4 gap-6">
-          <div className="md:col-span-1 bg-white rounded-lg shadow p-4 max-h-max">
+          {/* Sidebar */}
+          <div className="md:col-span-1 bg-white rounded-lg shadow p-4 max-h-fit overflow-y-auto">
             <h3 className="text-lg font-semibold mb-4">Previous Translations</h3>
             {loadingTranslations ? (
               <div className="flex justify-center py-4">
@@ -107,7 +109,6 @@ export default function RegionalLanguage() {
                   <div key={translation._id} className="relative group">
                     <button
                       onClick={() => {
-                        console.log(translation)
                         setSelectedTranslation(translation);
                         setInputText(translation.originalText);
                         setSelectedLanguage(translation.language);
@@ -119,12 +120,10 @@ export default function RegionalLanguage() {
                           : 'hover:bg-gray-100'
                       } border border-slate-200`}
                     >
-                      <p className="font-bold">{translation.title}</p>
-                      <p className="italic">{translation.language}</p>
-                      <p className="text-sm truncate">
-                        {selectedTranslation?._id === translation._id
-                          ? 'Selected'
-                          : translation.translatedText}
+                      <p className="font-bold truncate">{translation.title || 'Untitled'}</p>
+                      <p className="text-sm opacity-75">{translation.language}</p>
+                      <p className="text-xs opacity-75">
+                        {format(new Date(translation.createdAt), 'MMM dd, yyyy')}
                       </p>
                     </button>
                     <button
@@ -135,6 +134,9 @@ export default function RegionalLanguage() {
                     </button>
                   </div>
                 ))}
+                {previousTranslations.length === 0 && (
+                  <p className="text-gray-500 text-center py-4">No previous translations</p>
+                )}
               </div>
             )}
           </div>
@@ -145,6 +147,7 @@ export default function RegionalLanguage() {
               <h2 className="text-2xl font-bold mb-6">Regional Language Translator</h2>
 
               <div className="grid md:grid-cols-2 gap-6">
+                {/* Input section */}
                 <div>
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -153,7 +156,7 @@ export default function RegionalLanguage() {
                     <select
                       value={selectedLanguage}
                       onChange={(e) => setSelectedLanguage(e.target.value)}
-                      className="mt-1 p-2 outline-none block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
                     >
                       <option value="">Select language</option>
                       {languages.map((lang) => (
@@ -172,7 +175,7 @@ export default function RegionalLanguage() {
                       value={inputText}
                       onChange={(e) => setInputText(e.target.value)}
                       rows={8}
-                      className="mt-1 outline-none block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
                       placeholder="Enter text to translate..."
                     />
                   </div>
@@ -180,15 +183,16 @@ export default function RegionalLanguage() {
                   <button
                     onClick={handleTranslate}
                     disabled={!inputText || !selectedLanguage || loading}
-                    className="w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {loading ? 'Translating...' : 'Translate'}
                   </button>
                 </div>
 
+                {/* Output section */}
                 <div>
                   <h3 className="text-lg font-semibold mb-3">Translated Text</h3>
-                  <div className="border rounded-lg p-4 min-h-[200px] bg-gray-50">
+                  <div className="border rounded-lg p-4 min-h-[300px] bg-gray-50">
                     {loading ? (
                       <div className="flex items-center justify-center h-full">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>

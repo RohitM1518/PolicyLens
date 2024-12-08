@@ -2,6 +2,7 @@ import { UserCircleIcon } from '@heroicons/react/24/solid';
 import { DocumentTextIcon } from '@heroicons/react/24/outline';
 import Markdown from 'react-markdown';
 import { useSelector } from 'react-redux';
+import remarkGfm from 'remark-gfm'
 
 export default function ChatMessage({ message, isUser, isLoading }) {
   const user = useSelector(state => state?.currentUser?.user);
@@ -44,7 +45,7 @@ export default function ChatMessage({ message, isUser, isLoading }) {
         </div>
         
         <div className="text-gray-700 prose max-w-none">
-          <Markdown>
+          <Markdown rehypePlugins={[remarkGfm]} >
             {message.message}
           </Markdown>
         </div>

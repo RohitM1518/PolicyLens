@@ -6,8 +6,12 @@ import { ContentCopy, Download, Translate } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 import { TrashIcon } from '@heroicons/react/24/outline';
 import { generatePDF } from '../utils/pdfGenerator';
+import { useCallback } from 'react';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+
+// Add this state near your other state declarations
+
 
 const languages = [
   { code: 'Hindi', name: 'Hindi' },
@@ -36,6 +40,24 @@ export default function Summaries() {
   const [loadingSummaries, setLoadingSummaries] = useState(true);
   const backendURL = import.meta.env.VITE_BACKEND_URL;
   const accessToken = useSelector((state) => state?.currentUser?.accessToken);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+// Add this useEffect for handling window resize
+useEffect(() => {
+  const handleResize = () => {
+    setWindowWidth(window.innerWidth);
+  };
+
+  window.addEventListener('resize', handleResize);
+  return () => window.removeEventListener('resize', handleResize);
+}, []);
+
+// Create a function to calculate PDF width
+const getPDFWidth = useCallback(() => {
+  if (windowWidth >= 1024) return 800; // Desktop
+  if (windowWidth >= 768) return 600;  // Tablet
+  return windowWidth - 64; // Mobile (with padding)
+}, [windowWidth]);
 
   useEffect(() => {
     const fetchSummaries = async () => {
@@ -72,7 +94,7 @@ export default function Summaries() {
     setFile(selectedFile);
     setSelectedLanguage('');
     setTranslatedSummary('');
-    
+
     if (selectedFile) {
       setLoading(true);
       try {
@@ -126,12 +148,12 @@ export default function Summaries() {
 
   const handleDownload = () => {
     if (!summary?.summarizedText) return;
-    
+
     const doc = generatePDF(
       summary.summarizedText,
       summary.title || 'Policy Summary'
     );
-    
+
     doc.save(`${summary.title || 'policy-summary'}.pdf`);
   };
 
@@ -170,7 +192,7 @@ export default function Summaries() {
     <div className="py-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid md:grid-cols-4 gap-6">
-          <div className="md:col-span-1 bg-white rounded-lg shadow p-4 max-h-max">
+          <div className="md:col-span-1 bg-white rounded-lg shadow p-4 max-h-fit overflow-y-auto">
             <h3 className="text-lg font-semibold mb-4">Previous Summaries</h3>
             {loadingSummaries ? (
               <div className="flex justify-center py-4">
@@ -182,9 +204,13 @@ export default function Summaries() {
                   <div key={item._id} className="relative group">
                     <button
                       onClick={() => handleClick(item)}
-                      className="w-full text-left p-2 hover:bg-gray-100 rounded font-semibold border border-slate-200"
+                      className={`w-full text-left p-2 rounded ${summary?._id === item._id ? 'bg-primary text-white' : 'hover:bg-gray-100'
+                        } border border-slate-200`}
                     >
-                      {item.title}
+                      <p className="font-semibold truncate">{item.title}</p>
+                      <p className="text-sm opacity-75 truncate">
+                        {new Date(item.createdAt).toLocaleDateString()}
+                      </p>
                     </button>
                     <button
                       onClick={(e) => handleDelete(item._id, e)}
@@ -198,7 +224,6 @@ export default function Summaries() {
             )}
           </div>
 
-          {/* Main content */}
           <div className="md:col-span-3">
             <div className="bg-white rounded-lg shadow p-6">
               <h2 className="text-2xl font-bold mb-4">PDF Summary Generator</h2>
@@ -230,31 +255,44 @@ export default function Summaries() {
                 <div className="space-y-6">
                   <div className="border rounded-lg p-4">
                     <h3 className="text-lg font-semibold mb-3">Original Document</h3>
-                    <Document
-                      file={file}
-                      onLoadSuccess={onDocumentLoadSuccess}
-                      onLoadError={onDocumentLoadError}
-                      className="w-full"
-                    >
-                      <Page pageNumber={pageNumber} width={500} renderTextLayer={false} />
-                    </Document>
-                    {/* {error && <p className="text-red-500">{error}</p>} */}
-                    <div className="flex justify-between mt-4">
-                      <button
-                        disabled={pageNumber <= 1}
-                        onClick={previousPage}
-                        className="bg-primary text-white px-4 py-2 rounded-md disabled:opacity-50"
-                      >
-                        Previous
-                      </button>
-                      <p>Page {pageNumber} of {numPages}</p>
-                      <button
-                        disabled={pageNumber >= numPages}
-                        onClick={nextPage}
-                        className="bg-primary text-white px-4 py-2 rounded-md disabled:opacity-50"
-                      >
-                        Next
-                      </button>
+                    <div className="flex flex-col items-center w-full">
+                      {/* Add a container with responsive width */}
+                      <div className="w-full max-w-[800px] mx-auto">
+                        <Document
+                          file={file}
+                          onLoadSuccess={onDocumentLoadSuccess}
+                          onLoadError={onDocumentLoadError}
+                          className="w-full"
+                        >
+                          <Page
+                            pageNumber={pageNumber}
+                            width={window.innerWidth >= 768 ? 800 : window.innerWidth - 64} // Responsive width
+                            renderTextLayer={false}
+                            className="mb-2 mx-auto"
+                            scale={window.innerWidth < 768 ? 0.8 : 1} // Scale down on mobile
+                          />
+                        </Document>
+                        {error && <p className="text-red-500 mb-2">{error}</p>}
+                        <div className="flex items-center justify-between w-full mt-4 px-2">
+                          <button
+                            disabled={pageNumber <= 1}
+                            onClick={previousPage}
+                            className="bg-primary text-white px-3 py-1.5 text-sm md:px-4 md:py-2 rounded-md disabled:opacity-50 transition-opacity"
+                          >
+                            Previous
+                          </button>
+                          <p className="text-xs md:text-sm text-gray-600">
+                            Page {pageNumber} of {numPages}
+                          </p>
+                          <button
+                            disabled={pageNumber >= numPages}
+                            onClick={nextPage}
+                            className="bg-primary text-white px-3 py-1.5 text-sm md:px-4 md:py-2 rounded-md disabled:opacity-50 transition-opacity"
+                          >
+                            Next
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
 

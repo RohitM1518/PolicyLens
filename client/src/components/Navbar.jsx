@@ -48,15 +48,16 @@ export default function Navbar() {
       navigate('/');
       setResponse()
     } catch (error) {
-      setError(errorParser(error));
+      // setError(errorParser(error));
+      
       console.log(error)
     }
     finally {
       setIsLoading(false);
-      // persistor.purge().then(() => {
-      //   console.log('Persisted state cleared');
-      // });
-      // navigate('/signin')
+      persistor.purge().then(() => {
+        console.log('Persisted state cleared');
+      });
+      navigate('/signin')
     }
   };
 
