@@ -8,6 +8,7 @@ import {useDispatch} from 'react-redux'
 import {login} from '../redux/userSlice.js'
 import { useErrorContext} from '../contexts/ErrorContext.jsx'
 import { errorParser } from '../utils/errorParser.js';
+import { useUserContext } from '../contexts/UserContext.jsx';
 const steps = [
   {
     title: 'Basic Information',
@@ -82,15 +83,17 @@ export default function SignUp() {
   const {setIsLoading}=useLoadingContext();
   const {setError}=useErrorContext();
   const dispatch = useDispatch();
+  const {setUser}=useUserContext()
 
   const handleSubmit = async (event,values) => {
-    event.preventDefault();
+    // event.preventDefault();
     console.log('Form submitted:', values);
     try {
       setIsLoading(true);
       const res = await axios.post(`${backendURL}/user/register`,values);
       console.log("User logged in",res.data);
       dispatch(login(res?.data?.data))
+      setUser(res?.data?.data?.user)
     } catch (error) {
       setError(errorParser(error))
       console.log(error)

@@ -11,6 +11,7 @@ import { errorParser } from '../utils/errorParser';
 import { logout } from '../redux/userSlice';
 import { useLoadingContext } from '../contexts/LoadingContext';
 import { persistor } from '../redux/store';
+import { useUserContext } from '../contexts/UserContext';
 
 const navigation = [
   { name: 'Home', href: '/' },
@@ -32,7 +33,7 @@ export default function Navbar() {
   const accessToken = useSelector((state) => state?.currentUser?.accessToken);
   // console.log("Status " + accessToken)
   const isActive = (path) => location.pathname === path;
-
+  const {setUser}=useUserContext()
   const backendURL = import.meta.env.VITE_BACKEND_URL;
 
   const handleLogout = async () => {
@@ -49,11 +50,11 @@ export default function Navbar() {
       setResponse()
     } catch (error) {
       // setError(errorParser(error));
-      
       console.log(error)
     }
     finally {
       setIsLoading(false);
+      setUser(null);
       persistor.purge().then(() => {
         console.log('Persisted state cleared');
       });

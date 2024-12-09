@@ -6,6 +6,7 @@ import { useErrorContext } from "../contexts/ErrorContext";
 import { login } from '../redux/userSlice';
 import { useNavigate } from 'react-router-dom';
 import { errorParser } from '../utils/errorParser';
+import { useUserContext } from '../contexts/UserContext';
 
 export default function SignIn() {
   const [formData, setFormData] = useState({
@@ -13,6 +14,7 @@ export default function SignIn() {
     password: ''
   });
   
+  const {setUser}=useUserContext();
   const backendURL = import.meta.env.VITE_BACKEND_URL;
   const { setIsLoading } = useLoadingContext();
   const { setError } = useErrorContext();
@@ -35,6 +37,7 @@ export default function SignIn() {
       const res = await axios.post(`${backendURL}/user/login`, formData);
       console.log("User logged in", res.data);
       dispatch(login(res?.data?.data));
+      setUser(res?.data?.data?.user)
       navigate('/'); // Redirect to home page after successful login
     } catch (error) {
       setError(errorParser(error));

@@ -142,7 +142,7 @@ const updateUserProfile = asyncHandler(async (req, res) => {
 
     // Destructure the fields from the request body
     const {
-        name, email, age, maritalStatus, occupation, location, monthlySalary, annualIncome,
+        name, age, maritalStatus, occupation, location, monthlySalary, annualIncome,
         existingDebts, familySize, healthConditionsInFamily, lifestyleHabits, existingInsurancePolicies,
         healthStatus, vehicleOwnership, travelHabits, primaryGoalForInsurance, coverageAmountPreference,
         willingnessToPayPremiums, pastClaimsHistory
@@ -150,7 +150,6 @@ const updateUserProfile = asyncHandler(async (req, res) => {
 
     // Add fields to updateData only if they are provided in the request
     if (name) updateData.name = name;
-    if (email) updateData.email = email;
     if (age) updateData.age = age;
     if (maritalStatus) updateData.maritalStatus = maritalStatus;
     if (occupation) updateData.occupation = occupation;
