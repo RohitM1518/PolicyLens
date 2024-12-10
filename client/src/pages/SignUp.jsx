@@ -1,13 +1,19 @@
 import { useState } from 'react';
-import { Formik, Form, Field } from 'formik';
+import { motion } from 'framer-motion';
+import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import axios from 'axios';
 import { useLoadingContext } from '../contexts/LoadingContext';
-import {useDispatch} from 'react-redux'
-import {login} from '../redux/userSlice.js'
-import { useErrorContext} from '../contexts/ErrorContext.jsx'
-import { errorParser } from '../utils/errorParser.js';
+import { useDispatch } from 'react-redux';
+import { login } from '../redux/userSlice';
+import { useErrorContext } from '../contexts/ErrorContext';
+import { errorParser } from '../utils/errorParser';
+import { useUserContext } from '../contexts/UserContext';
+import { useNavigate } from 'react-router-dom';
+import FormInput from '../components/auth/FormInput';
+import AuthLayout from '../components/auth/authLayout';
+
 const steps = [
   {
     title: 'Basic Information',
@@ -78,152 +84,115 @@ const initialValues = {
 
 export default function SignUp() {
   const [currentStep, setCurrentStep] = useState(0);
-  const backendURL = import.meta.env.VITE_BACKEND_URL
-  const {setIsLoading}=useLoadingContext();
-  const {setError}=useErrorContext();
+  const backendURL = import.meta.env.VITE_BACKEND_URL;
+  const {setIsLoading} = useLoadingContext();
+  const {setError} = useErrorContext();
   const dispatch = useDispatch();
+  const {setUser} = useUserContext();
+  const navigate = useNavigate();
 
-  const handleSubmit = async (event,values) => {
-    event.preventDefault();
-    console.log('Form submitted:', values);
+  const handleSubmit = async (values) => {
     try {
       setIsLoading(true);
-      const res = await axios.post(`${backendURL}/user/register`,values);
-      console.log("User logged in",res.data);
-      dispatch(login(res?.data?.data))
+      const res = await axios.post(`${backendURL}/user/register`, values);
+      dispatch(login(res?.data?.data));
+      setUser(res?.data?.data?.user);
+      navigate('/');
     } catch (error) {
-      setError(errorParser(error))
-      console.log(error)
-    }finally{
-      setIsLoading(false)
-    }
-  };
-
-  const renderField = (fieldName) => {
-    const fieldProps = {
-      className: "block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6",
-    };
-
-    switch (fieldName) {
-      case 'password':
-        return <Field type="password" name={fieldName} {...fieldProps} />;
-      case 'maritalStatus':
-        return (
-          <Field as="select" name={fieldName} {...fieldProps}>
-            <option value="">Select status</option>
-            <option value="Single">Single</option>
-            <option value="Married">Married</option>
-            <option value="Divorced">Divorced</option>
-            <option value="Widowed">Widowed</option>
-          </Field>
-        );
-      case 'healthStatus':
-        return (
-          <Field as="select" name={fieldName} {...fieldProps}>
-            <option value="">Select status</option>
-            <option value="Excellent">Excellent</option>
-            <option value="Good">Good</option>
-            <option value="Fair">Fair</option>
-            <option value="Poor">Poor</option>
-          </Field>
-        );
-      case 'willingnessToPayPremiums':
-        return (
-          <Field as="select" name={fieldName} {...fieldProps}>
-            <option value="">Select frequency</option>
-            <option value="Monthly">Monthly</option>
-            <option value="Quarterly">Quarterly</option>
-            <option value="Annually">Annually</option>
-          </Field>
-        );
-      case 'lifestyleHabits':
-        return (
-          <div className="space-y-2">
-            <label className="flex items-center space-x-2">
-              <Field type="checkbox" name={fieldName} value="Smoking" className="h-4 w-4 rounded" />
-              <span>Smoking</span>
-            </label>
-            <label className="flex items-center space-x-2">
-              <Field type="checkbox" name={fieldName} value="Alcohol" className="h-4 w-4 rounded" />
-              <span>Alcohol</span>
-            </label>
-            <label className="flex items-center space-x-2">
-              <Field type="checkbox" name={fieldName} value="None" className="h-4 w-4 rounded" />
-              <span>None</span>
-            </label>
-          </div>
-        );
-      default:
-        return <Field type="text" name={fieldName} {...fieldProps} />;
+      setError(errorParser(error));
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-[calc(100vh-200px)] flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="text-center text-3xl font-bold tracking-tight text-gray-900">
-          {steps[currentStep].title}
-        </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Step {currentStep + 1} of {steps.length}
-        </p>
-      </div>
-
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <Formik
-            initialValues={initialValues}
-            validationSchema={steps[currentStep].validationSchema}
-            onSubmit={(values, { setSubmitting }) => {
-              if (currentStep === steps.length - 1) {
-                handleSubmit(values);
-              } else {
-                setCurrentStep(currentStep + 1);
-              }
-              setSubmitting(false);
-            }}
-          >
-            {({ errors, touched, isSubmitting }) => (
-              <Form className="space-y-6">
-                {steps[currentStep].fields.map((fieldName) => (
-                  <div key={fieldName}>
-                    <label htmlFor={fieldName} className="block text-sm font-medium leading-6 text-gray-900 capitalize">
-                      {fieldName.replace(/([A-Z])/g, ' $1').trim()}
-                    </label>
-                    <div className="mt-2">
-                      {renderField(fieldName)}
-                      {errors[fieldName] && touched[fieldName] && (
-                        <p className="mt-2 text-sm text-red-600">{errors[fieldName]}</p>
-                      )}
-                    </div>
-                  </div>
-                ))}
-
-                <div className="flex justify-between">
-                  {currentStep > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => setCurrentStep(currentStep - 1)}
-                      className="inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-                    >
-                      <ChevronLeftIcon className="w-4 h-4 mr-2" />
-                      Previous
-                    </button>
-                  )}
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-primary rounded-md hover:bg-secondary ml-auto"
-                  >
-                    {currentStep === steps.length - 1 ? 'Submit' : 'Next'}
-                    {currentStep !== steps.length - 1 && <ChevronRightIcon className="w-4 h-4 ml-2" />}
-                  </button>
-                </div>
-              </Form>
-            )}
-          </Formik>
+    <AuthLayout
+      title={steps[currentStep].title}
+      subtitle="Already have an account?"
+      linkText="Sign in"
+      linkTo="/signin"
+    >
+      <div className="mb-8">
+        <div className="relative">
+          <div className="absolute left-0 top-1/2 h-0.5 w-full bg-gray-200 -translate-y-1/2" />
+          <div className="relative z-10 flex justify-between">
+            {steps.map((_, index) => (
+              <motion.div
+                key={index}
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: index * 0.1 }}
+                className={`
+                  w-8 h-8 rounded-full flex items-center justify-center
+                  ${index <= currentStep ? 'bg-primary text-white' : 'bg-gray-200 text-gray-400'}
+                  transition-colors duration-200
+                `}
+              >
+                {index + 1}
+              </motion.div>
+            ))}
+          </div>
         </div>
       </div>
-    </div>
+
+      <Formik
+        initialValues={initialValues}
+        validationSchema={steps[currentStep].validationSchema}
+        onSubmit={(values, { setSubmitting }) => {
+          if (currentStep === steps.length - 1) {
+            handleSubmit(values);
+          } else {
+            setCurrentStep(currentStep + 1);
+          }
+          setSubmitting(false);
+        }}
+      >
+        {({ errors, touched, isSubmitting }) => (
+          <Form className="space-y-6">
+            {steps[currentStep].fields.map((fieldName) => (
+              <FormInput
+                key={fieldName}
+                label={fieldName.replace(/([A-Z])/g, ' $1').trim()}
+                id={fieldName}
+                name={fieldName}
+                error={errors[fieldName]}
+                touched={touched[fieldName]}
+              />
+            ))}
+
+            <div className="flex justify-between pt-4">
+              {currentStep > 0 && (
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  type="button"
+                  onClick={() => setCurrentStep(currentStep - 1)}
+                  className="inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors duration-200"
+                >
+                  <ChevronLeftIcon className="w-4 h-4 mr-2" />
+                  Previous
+                </motion.button>
+              )}
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                type="submit"
+                disabled={isSubmitting}
+                className={`
+                  inline-flex items-center px-4 py-2 text-sm font-semibold text-white
+                  bg-gradient-to-r from-primary to-secondary rounded-md
+                  hover:from-primary/90 hover:to-secondary/90
+                  transition-all duration-200
+                  ${currentStep === 0 ? 'w-full' : 'ml-auto'}
+                `}
+              >
+                {currentStep === steps.length - 1 ? 'Submit' : 'Next'}
+                {currentStep !== steps.length - 1 && <ChevronRightIcon className="w-4 h-4 ml-2" />}
+              </motion.button>
+            </div>
+          </Form>
+        )}
+      </Formik>
+    </AuthLayout>
   );
 }

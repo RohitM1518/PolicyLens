@@ -62,17 +62,9 @@ const userSchema = new mongoose.Schema({
         type: Number,
         min: 1
     },
-    healthConditionsInFamily: {
-        type: [String],
-        default: []
-    },
     lifestyleHabits: {
         type: [String],
         enum: ['Smoking', 'Alcohol', 'None'],
-        default: []
-    },
-    existingInsurancePolicies: {
-        type: [String],
         default: []
     },
     healthStatus: {
@@ -104,10 +96,6 @@ const userSchema = new mongoose.Schema({
         enum: ['Monthly', 'Quarterly', 'Annually'],
         // required: true
     },
-    pastClaimsHistory: {
-        type: Boolean,
-        default: false
-    }
 });
 
 // Hash password before saving
