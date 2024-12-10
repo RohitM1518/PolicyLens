@@ -1,19 +1,24 @@
-import { useEffect, useState } from 'react';
-import { Formik, Form, Field } from 'formik';
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 import { Tab } from '@headlessui/react';
 import clsx from 'clsx';
-import { use } from 'react';
-import { useSelector,useDispatch } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { updateUserDetails } from '../redux/userSlice';
+import { useUserContext } from '../contexts/UserContext';
 import { useResponseContext } from '../contexts/ResponseContext';
 import { useErrorContext } from '../contexts/ErrorContext';
 import { errorParser } from '../utils/errorParser';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
-import { useUserContext } from '../contexts/UserContext';
-import { updateUserDetails } from '../redux/userSlice';
+import Card from '../components/shared/Card';
+import Button from '../components/shared/Button';
+import PageHeader from '../components/shared/PageHeader';
+import FormInput from '../components/auth/FormInput';
+import { fadeIn, scaleIn } from '../styles/animations';
+import { Field } from 'formik';
 
-// Validation schemas
 const profileSchema = Yup.object().shape({
   name: Yup.string(),
   age: Yup.number().nullable().min(0, 'Age must be positive'),
@@ -33,8 +38,6 @@ const profileSchema = Yup.object().shape({
   lifestyleHabits: Yup.array().of(Yup.string().oneOf(['Smoking', 'Alcohol', 'None']))
 });
 
-
-
 const passwordSchema = Yup.object().shape({
   currentPassword: Yup.string().required('Current password is required'),
   newPassword: Yup.string()
@@ -48,59 +51,53 @@ const passwordSchema = Yup.object().shape({
 export default function Profile() {
   const [activeTab, setActiveTab] = useState(0);
   const navigate = useNavigate();
-  // const user = useSelector((state) => state?.currentUser?.user);
-  const dispatch = useDispatch()
-  const { setResponse } = useResponseContext()
-  const { setError } = useErrorContext()
-  const backendURL = import.meta.env.VITE_BACKEND_URL
+  const dispatch = useDispatch();
+  const { setResponse } = useResponseContext();
+  const { setError } = useErrorContext();
+  const backendURL = import.meta.env.VITE_BACKEND_URL;
   const accessToken = useSelector((state) => state?.currentUser?.accessToken);
-  const {user,setUser}=useUserContext()
-  // Handlers for form submission
+  const { setUser } = useUserContext();
+  const user = useSelector(state=>state?.currentUser.user)
+  console.log(user)
   const handleProfileUpdate = async (values) => {
-    console.log('Profile update:', values);
-    // Add your API call for updating profile
     try {
-      const res=await axios.put(`${backendURL}/user/profile`, values, {
+      const res = await axios.put(`${backendURL}/user/profile`, values, {
         withCredentials: true,
         headers: {
           'Authorization': `Bearer ${accessToken}`
         }
-      })
-      // navigate(0)
-      setUser(res?.data?.data?.user)
-      dispatch(updateUserDetails(res?.data?.data?.user))
-      setResponse("User Details Updated Successfully")
+      });
+      setUser(res?.data?.data?.user);
+      dispatch(updateUserDetails(res?.data?.data?.user));
+      setResponse("Profile updated successfully");
     } catch (error) {
       setError(errorParser(error));
-      console.log(error)
     }
   };
 
-
-
   const handlePasswordUpdate = async (values) => {
-    console.log('Password update:', values);
-    // Add your API call for updating password
     try {
       await axios.put(`${backendURL}/user/change-password`, values, {
         withCredentials: true,
         headers: {
           'Authorization': `Bearer ${accessToken}`
         }
-      })
-      setResponse("Password Updated Successfully")
+      });
+      setResponse("Password updated successfully");
     } catch (error) {
       setError(errorParser(error));
-      console.log(error)
     }
   };
 
   return (
-    <div className="py-10">
+    <motion.div {...fadeIn} className="py-10">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white shadow-md rounded-lg overflow-hidden">
+        <Card>
           <div className="p-6">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">Profile Settings</h2>
+            <PageHeader 
+              title="Profile Settings" 
+              subtitle="Manage your account settings and preferences"
+            />
 
             <Tab.Group selectedIndex={activeTab} onChange={setActiveTab}>
               <Tab.List className="flex space-x-1 rounded-lg bg-gray-100 p-1 mb-6">
@@ -108,7 +105,7 @@ export default function Profile() {
                   className={({ selected }) =>
                     clsx(
                       'w-full rounded-lg py-2.5 text-sm font-medium leading-5 text-center',
-                      'focus:outline-none focus:ring-2 ring-offset-2',
+                      'focus:outline-none focus:ring-2 ring-offset-2 transition-all duration-200',
                       selected
                         ? 'bg-white text-primary shadow'
                         : 'text-gray-600 hover:bg-white/[0.12] hover:text-primary'
@@ -121,7 +118,7 @@ export default function Profile() {
                   className={({ selected }) =>
                     clsx(
                       'w-full rounded-lg py-2.5 text-sm font-medium leading-5 text-center',
-                      'focus:outline-none focus:ring-2 ring-offset-2',
+                      'focus:outline-none focus:ring-2 ring-offset-2 transition-all duration-200',
                       selected
                         ? 'bg-white text-primary shadow'
                         : 'text-gray-600 hover:bg-white/[0.12] hover:text-primary'
@@ -133,322 +130,267 @@ export default function Profile() {
               </Tab.List>
 
               <Tab.Panels>
-                {/* Profile Information Form */}
                 <Tab.Panel>
-                  <Formik
-                    initialValues={{
-                      name: user?.name,
-                      age: user?.age,
-                      maritalStatus: user?.maritalStatus,
-                      occupation: user?.occupation,
-                      location: user?.location,
-                      monthlySalary: user?.monthlySalary,
-                      existingDebts: user?.existingDebts,
-                      familySize: user?.familySize,
-                      annualIncome: user?.annualIncome,
-                      healthStatus: user?.healthStatus,
-                      travelHabits: user?.travelHabits,
-                      primaryGoalForInsurance: user?.primaryGoalForInsurance,
-                      coverageAmountPreference: user?.coverageAmountPreference,
-                      willingnessToPayPremiums: user?.willingnessToPayPremiums,
-                      lifestyleHabits: user?.lifestyleHabits,
-                      vehicleOwnership: user?.vehicleOwnership
-                    }}
-                    validationSchema={profileSchema}
-                    onSubmit={handleProfileUpdate}
-                  >
-                    {({ errors, touched }) => (
-                      <Form className="space-y-6">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <motion.div {...scaleIn}>
+                    <Formik
+                      initialValues={{
+                        name: user?.name ?? '',
+                        age: user?.age || '',
+                        maritalStatus: user?.maritalStatus || '',
+                        occupation: user?.occupation || '',
+                        location: user?.location || '',
+                        monthlySalary: user?.monthlySalary || '',
+                        existingDebts: user?.existingDebts || '',
+                        familySize: user?.familySize || '',
+                        annualIncome: user?.annualIncome || '',
+                        healthStatus: user?.healthStatus || '',
+                        travelHabits: user?.travelHabits || '',
+                        primaryGoalForInsurance: user?.primaryGoalForInsurance || '',
+                        coverageAmountPreference: user?.coverageAmountPreference || '',
+                        willingnessToPayPremiums: user?.willingnessToPayPremiums || '',
+                        lifestyleHabits: user?.lifestyleHabits || [],
+                        vehicleOwnership: user?.vehicleOwnership || false
+                      }}
+                      validationSchema={profileSchema}
+                      onSubmit={handleProfileUpdate}
+                    >
+                      {({ errors, touched }) => (
+                        <Form className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <FormInput
+                            label="Name"
+                            name="name"
+                            error={errors.name}
+                            touched={touched.name}
+                          />
+                          <FormInput
+                            label="Age"
+                            name="age"
+                            type="number"
+                            error={errors.age}
+                            touched={touched.age}
+                          />
                           <div>
-                            <label className="block text-sm font-medium text-gray-700">Name</label>
-                            <Field
-                              name="name"
-                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary focus:ring-opacity-50"
-                            />
-                            {errors.name && touched.name && (
-                              <p className="mt-1 text-sm text-red-600">{errors.name}</p>
-                            )}
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700">Age</label>
-                            <Field
-                              name="age"
-                              type="number"
-                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary focus:ring-opacity-50"
-                            />
-                            {errors.age && touched.age && (
-                              <p className="mt-1 text-sm text-red-600">{errors.age}</p>
-                            )}
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700">Marital Status</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Marital Status
+                            </label>
                             <Field
                               as="select"
                               name="maritalStatus"
-                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary focus:ring-opacity-50"
+                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
                             >
-                              <option value="">Select status</option>
+                              <option value="">Select Status</option>
                               <option value="Single">Single</option>
                               <option value="Married">Married</option>
                               <option value="Divorced">Divorced</option>
                               <option value="Widowed">Widowed</option>
                             </Field>
-                            {errors.maritalStatus && touched.maritalStatus && (
-                              <p className="mt-1 text-sm text-red-600">{errors.maritalStatus}</p>
-                            )}
                           </div>
-
+                          <FormInput
+                            label="Occupation"
+                            name="occupation"
+                            error={errors.occupation}
+                            touched={touched.occupation}
+                          />
+                          <FormInput
+                            label="Location"
+                            name="location"
+                            error={errors.location}
+                            touched={touched.location}
+                          />
+                          <FormInput
+                            label="Monthly Salary"
+                            name="monthlySalary"
+                            type="number"
+                            error={errors.monthlySalary}
+                            touched={touched.monthlySalary}
+                          />
+                          <FormInput
+                            label="Annual Income"
+                            name="annualIncome"
+                            type="number"
+                            error={errors.annualIncome}
+                            touched={touched.annualIncome}
+                          />
+                          <FormInput
+                            label="Existing Debts"
+                            name="existingDebts"
+                            type="number"
+                            error={errors.existingDebts}
+                            touched={touched.existingDebts}
+                          />
+                          <FormInput
+                            label="Family Size"
+                            name="familySize"
+                            type="number"
+                            error={errors.familySize}
+                            touched={touched.familySize}
+                          />
                           <div>
-                            <label className="block text-sm font-medium text-gray-700">Occupation</label>
-                            <Field
-                              name="occupation"
-                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary focus:ring-opacity-50"
-                            />
-                            {errors.occupation && touched.occupation && (
-                              <p className="mt-1 text-sm text-red-600">{errors.occupation}</p>
-                            )}
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700">Location</label>
-                            <Field
-                              name="location"
-                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary focus:ring-opacity-50"
-                            />
-                            {errors.location && touched.location && (
-                              <p className="mt-1 text-sm text-red-600">{errors.location}</p>
-                            )}
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700">Monthly Salary</label>
-                            <Field
-                              name="monthlySalary"
-                              type="number"
-                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary focus:ring-opacity-50"
-                            />
-                            {errors.monthlySalary && touched.monthlySalary && (
-                              <p className="mt-1 text-sm text-red-600">{errors.monthlySalary}</p>
-                            )}
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700">Annual Income</label>
-                            <Field
-                              name="annualIncome"
-                              type="number"
-                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary focus:ring-opacity-50"
-                            />
-                            {errors.annualIncome && touched.annualIncome && (
-                              <p className="mt-1 text-sm text-red-600">{errors.annualIncome}</p>
-                            )}
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700">Existing Debts</label>
-                            <Field
-                              name="existingDebts"
-                              type="number"
-                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary focus:ring-opacity-50"
-                            />
-                            {errors.existingDebts && touched.existingDebts && (
-                              <p className="mt-1 text-sm text-red-600">{errors.existingDebts}</p>
-                            )}
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700">Family Size</label>
-                            <Field
-                              name="familySize"
-                              type="number"
-                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary focus:ring-opacity-50"
-                            />
-                            {errors.familySize && touched.familySize && (
-                              <p className="mt-1 text-sm text-red-600">{errors.familySize}</p>
-                            )}
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700">Coverage Ammount Preference</label>
-                            <Field
-                              name="coverageAmountPreference"
-                              type="number"
-                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary focus:ring-opacity-50"
-                            />
-                            {errors.coverageAmountPreference && touched.coverageAmountPreference && (
-                              <p className="mt-1 text-sm text-red-600">{errors.coverageAmountPreference}</p>
-                            )}
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700">Vehicle Ownership</label>
-                            <Field
-                              name="vehicleOwnership"
-                              type="boolean"
-                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary focus:ring-opacity-50"
-                            />
-                            {errors.vehicleOwnership && touched.vehicleOwnership && (
-                              <p className="mt-1 text-sm text-red-600">{errors.vehicleOwnership}</p>
-                            )}
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700">Primary Goal of Insurance</label>
-                            <Field
-                              name="primaryGoalForInsurance"
-                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary focus:ring-opacity-50"
-                            />
-                            {errors.primaryGoalForInsurance && touched.primaryGoalForInsurance && (
-                              <p className="mt-1 text-sm text-red-600">{errors.primaryGoalForInsurance}</p>
-                            )}
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700">Willingness to Pay Premiums</label>
-                            <Field
-                              as="select"
-                              name="willingnessToPayPremiums"
-                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary focus:ring-opacity-50"
-                            >
-                              <option value="">Select status</option>
-                              <option value="Monthly">Monthly</option>
-                              <option value="Quarterly">Quarterly</option>
-                              <option value="Annually">Annually</option>
-                            </Field>
-
-                            {errors.willingnessToPayPremiums && touched.willingnessToPayPremiums && (
-                              <p className="mt-1 text-sm text-red-600">{errors.willingnessToPayPremiums}</p>
-                            )}
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700">Travel Habits</label>
-                            <Field
-                              as="select"
-                              name="travelHabits"
-                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary focus:ring-opacity-50"
-                            >
-                              <option value="">Select status</option>
-                              <option value="Domestic">Domestic</option>
-                              <option value="International">International</option>
-                              <option value="None">None</option>
-                            </Field>
-
-                            {errors.travelHabits && touched.travelHabits && (
-                              <p className="mt-1 text-sm text-red-600">{errors.travelHabits}</p>
-                            )}
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700">Health Status</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Health Status
+                            </label>
                             <Field
                               as="select"
                               name="healthStatus"
-                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary focus:ring-opacity-50"
+                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
                             >
-                              <option value="">Select status</option>
+                              <option value="">Select Status</option>
                               <option value="Excellent">Excellent</option>
                               <option value="Good">Good</option>
                               <option value="Fair">Fair</option>
                               <option value="Poor">Poor</option>
                             </Field>
-                            {errors.healthStatus && touched.healthStatus && (
-                              <p className="mt-1 text-sm text-red-600">{errors.healthStatus}</p>
-                            )}
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700">Life Style habits</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Vehicle Ownership
+                            </label>
+                            <Field
+                              type="checkbox"
+                              name="vehicleOwnership"
+                              className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Travel Habits
+                            </label>
                             <Field
                               as="select"
-                              name="lifestyleHabits"
-                              multiple={true}
-                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary focus:ring-opacity-50"
+                              name="travelHabits"
+                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
                             >
-                              <option value="Smoking">Smoking</option>
-                              <option value="Alcohol">Alcohol</option>
+                              <option value="">Select Habit</option>
+                              <option value="Domestic">Domestic</option>
+                              <option value="International">International</option>
                               <option value="None">None</option>
                             </Field>
-                            {errors.lifestyleHabits && touched.lifestyleHabits && (
-                              <p className="mt-1 text-sm text-red-600">{errors.lifestyleHabits}</p>
-                            )}
                           </div>
-
+                          <FormInput
+                            label="Primary Goal for Insurance"
+                            name="primaryGoalForInsurance"
+                            error={errors.primaryGoalForInsurance}
+                            touched={touched.primaryGoalForInsurance}
+                          />
+                          <FormInput
+                            label="Coverage Amount Preference"
+                            name="coverageAmountPreference"
+                            type="number"
+                            error={errors.coverageAmountPreference}
+                            touched={touched.coverageAmountPreference}
+                          />
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Premium Payment Frequency
+                            </label>
+                            <Field
+                              as="select"
+                              name="willingnessToPayPremiums"
+                              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
+                            >
+                              <option value="">Select Frequency</option>
+                              <option value="Monthly">Monthly</option>
+                              <option value="Quarterly">Quarterly</option>
+                              <option value="Annually">Annually</option>
+                            </Field>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Lifestyle Habits
+                            </label>
+                            <div className="space-y-2">
+                              <label className="flex items-center">
+                                <Field
+                                  type="checkbox"
+                                  name="lifestyleHabits"
+                                  value="Smoking"
+                                  className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded mr-2"
+                                />
+                                Smoking
+                              </label>
+                              <label className="flex items-center">
+                                <Field
+                                  type="checkbox"
+                                  name="lifestyleHabits"
+                                  value="Alcohol"
+                                  className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded mr-2"
+                                />
+                                Alcohol
+                              </label>
+                              <label className="flex items-center">
+                                <Field
+                                  type="checkbox"
+                                  name="lifestyleHabits"
+                                  value="None"
+                                  className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded mr-2"
+                                />
+                                None
+                              </label>
+                            </div>
+                          </div>
                         </div>
-
                         <div className="flex justify-end">
-                          <button
-                            type="submit"
-                            className="bg-primary text-white px-4 py-2 rounded-md hover:bg-secondary"
-                          >
+                          <Button type="submit" variant="primary">
                             Update Profile
-                          </button>
+                          </Button>
                         </div>
                       </Form>
-                    )}
-                  </Formik>
+                      
+                      )}
+                    </Formik>
+                  </motion.div>
                 </Tab.Panel>
 
-                {/* Change Password Form */}
                 <Tab.Panel>
-                  <Formik
-                    initialValues={{
-                      currentPassword: '',
-                      newPassword: '',
-                      confirmPassword: '',
-                    }}
-                    validationSchema={passwordSchema}
-                    onSubmit={handlePasswordUpdate}
-                  >
-                    {({ errors, touched }) => (
-                      <Form className="space-y-6 max-w-md">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700">Current Password</label>
-                          <Field
+                  <motion.div {...scaleIn}>
+                    <Formik
+                      initialValues={{
+                        currentPassword: '',
+                        newPassword: '',
+                        confirmPassword: '',
+                      }}
+                      validationSchema={passwordSchema}
+                      onSubmit={handlePasswordUpdate}
+                    >
+                      {({ errors, touched }) => (
+                        <Form className="space-y-6 max-w-md">
+                          <FormInput
+                            label="Current Password"
                             name="currentPassword"
                             type="password"
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary focus:ring-opacity-50"
+                            error={errors.currentPassword}
+                            touched={touched.currentPassword}
                           />
-                          {errors.currentPassword && touched.currentPassword && (
-                            <p className="mt-1 text-sm text-red-600">{errors.currentPassword}</p>
-                          )}
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700">New Password</label>
-                          <Field
+                          <FormInput
+                            label="New Password"
                             name="newPassword"
                             type="password"
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary focus:ring-opacity-50"
+                            error={errors.newPassword}
+                            touched={touched.newPassword}
                           />
-                          {errors.newPassword && touched.newPassword && (
-                            <p className="mt-1 text-sm text-red-600">{errors.newPassword}</p>
-                          )}
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700">Confirm Password</label>
-                          <Field
+                          <FormInput
+                            label="Confirm Password"
                             name="confirmPassword"
                             type="password"
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary focus:ring-opacity-50"
+                            error={errors.confirmPassword}
+                            touched={touched.confirmPassword}
                           />
-                          {errors.confirmPassword && touched.confirmPassword && (
-                            <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
-                          )}
-                        </div>
-
-                        <div className="flex justify-end">
-                          <button
-                            type="submit"
-                            className="bg-primary text-white px-4 py-2 rounded-md hover:bg-secondary"
-                          >
-                            Update Password
-                          </button>
-                        </div>
-                      </Form>
-                    )}
-                  </Formik>
+                          <div className="flex justify-end">
+                            <Button type="submit" variant="primary">
+                              Update Password
+                            </Button>
+                          </div>
+                        </Form>
+                      )}
+                    </Formik>
+                  </motion.div>
                 </Tab.Panel>
               </Tab.Panels>
             </Tab.Group>
           </div>
-        </div>
+        </Card>
       </div>
-    </div>
+    </motion.div>
   );
 }

@@ -1,8 +1,9 @@
+import { Field } from 'formik';
 import { motion } from 'framer-motion';
 
 export default function FormInput({ 
   label, 
-  id, 
+  name, // Changed from id to name for Formik compatibility
   error, 
   touched,
   type = "text",
@@ -14,12 +15,13 @@ export default function FormInput({
       animate={{ x: 0, opacity: 1 }}
       transition={{ duration: 0.3 }}
     >
-      <label htmlFor={id} className="block text-sm font-medium leading-6 text-gray-900">
+      <label htmlFor={name} className="block text-sm font-medium leading-6 text-gray-900">
         {label}
       </label>
       <div className="mt-2 relative">
-        <input
-          id={id}
+        <Field
+          id={name}
+          name={name}
           type={type}
           {...props}
           className={`

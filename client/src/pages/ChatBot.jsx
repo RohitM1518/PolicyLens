@@ -1,10 +1,24 @@
 import { useState, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
+import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
+import axios from 'axios';
+import { useSelector } from 'react-redux';
 import ChatSidebar from '../components/chat/ChatSidebar';
 import ChatMessage from '../components/chat/ChatMessage';
 import ChatInput from '../components/chat/ChatInput';
-import axios from 'axios';
-import { useSelector } from 'react-redux';
-import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
+import LoadingSpinner from '../components/shared/LoadingSpinner';
+import EmptyState from '../components/shared/EmptyState';
+import { ChatBubbleBottomCenterTextIcon } from '@heroicons/react/24/outline';
+import { fadeIn, slideIn } from '../styles/animations';
+
+const suggestions = [
+  "What insurance policies do you recommend for a small family?",
+  "Explain health insurance coverage options",
+  "How do I file an insurance claim?",
+  "What factors affect my insurance premium?",
+  "Compare term life vs whole life insurance",
+  "Compare term life vs whole life insurance"
+];
 
 export default function ChatBot() {
   const [chats, setChats] = useState([]);
@@ -17,14 +31,6 @@ export default function ChatBot() {
   const chatContainerRef = useRef(null);
   const backendURL = import.meta.env.VITE_BACKEND_URL;
   const accessToken = useSelector((state) => state?.currentUser?.accessToken);
-
-  const suggestions = [
-    "What insurance policies do you recommend for a small family?",
-    "Explain health insurance coverage options",
-    "How do I file an insurance claim?",
-    "What factors affect my insurance premium?",
-    "Compare term life vs whole life insurance"
-  ];
 
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
@@ -91,10 +97,10 @@ export default function ChatBot() {
     setSidebarOpen(false);
   };
 
-  const handleSuggestion=(message)=>{
+  const handleSuggestion = (message) => {
     handleNewChat();
-    handleSendMessage(message)
-  }
+    handleSendMessage(message);
+  };
 
   const handleSendMessage = async (message) => {
     if (!message.message.trim()) return;
@@ -143,15 +149,19 @@ export default function ChatBot() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <LoadingSpinner size="lg" />
       </div>
     );
   }
 
   return (
-    <div className="flex h-[calc(100vh-64px)] overflow-hidden relative">
+    <motion.div 
+      {...fadeIn}
+      className="flex h-[calc(100vh-64px)] overflow-hidden relative"
+    >
       {/* Mobile sidebar toggle */}
-      <button
+      <motion.button
+        {...slideIn}
         onClick={() => setSidebarOpen(!sidebarOpen)}
         className="md:hidden fixed bottom-20 left-0 z-50 p-2 bg-white rounded-md shadow-lg"
       >
@@ -160,7 +170,7 @@ export default function ChatBot() {
         ) : (
           <Bars3Icon className="h-6 w-6 text-gray-600" />
         )}
-      </button>
+      </motion.button>
 
       {/* Sidebar */}
       <div className={`
@@ -177,7 +187,10 @@ export default function ChatBot() {
 
       {/* Overlay */}
       {sidebarOpen && (
-        <div
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
           className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"
           onClick={() => setSidebarOpen(false)}
         />
@@ -196,24 +209,34 @@ export default function ChatBot() {
             />
           ))}
           {
-            !activeChat && messages.length === 0 &&
-            <div className="p-4 border-t border-gray-200 flex flex-col justify-center items-center">
-              <div>
-                <h1 className="font-semibold text-8xl m-16 opacity-10">New Chat</h1>
-              </div>
-              <h4 className="text-sm font-medium text-gray-700 mb-2 text-center">Suggestions</h4>
-              <div className="space-y-2 grid grid-cols-2 gap-3 max-lg:grid-cols-1">
-                {suggestions.map((suggestion, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleSuggestion({message: suggestion})}
-                    className="text-left border border-emerald-300 text-sm text-gray-600 hover:text-primary p-2 rounded-md hover:bg-gray-100 transition-colors"
-                  >
-                    {suggestion}
-                  </button>
-                ))}
-              </div>
-            </div>
+            !activeChat && messages.length === 0 && (
+              <EmptyState
+                icon={ChatBubbleBottomCenterTextIcon}
+                title="Start a New Chat"
+                description="Choose a suggestion or type your own message to begin"
+                action={
+                  <div className="max-w-3xl mx-auto mt-8">
+                    <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
+                      {suggestions.map((suggestion, index) => (
+                        <motion.button
+                          key={index}
+                          whileHover={{ scale: 1.02, backgroundColor: "#f3f4f6" }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => handleSuggestion({message: suggestion})}
+                          className="text-left border border-gray-200 text-sm text-gray-600 p-4 rounded-lg 
+                                     shadow-sm hover:shadow-md hover:border-primary/20
+                                     bg-white transition-all duration-200
+                                     min-h-[80px] flex items-center"
+                        >
+                          <span className="line-clamp-3">{suggestion}</span>
+                        </motion.button>
+                      ))}
+                    </div>
+                  </div>
+                }
+              />
+            )
+            
           }
           {messageLoading && <ChatMessage isLoading={true} />}
           <div ref={messagesEndRef} />
@@ -225,6 +248,6 @@ export default function ChatBot() {
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

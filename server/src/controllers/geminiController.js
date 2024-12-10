@@ -20,7 +20,7 @@ const getResponse = async (prompt,language) => {
 
 const generateTitle = async(prompt)=>{
     try {
-        const newPrompt = prompt + " Generate a exact one title for this chat without any extra information";
+        const newPrompt = prompt + " Generate a exact one title for this chat without any extra information and maximum of 5 words";
         const title = await model.generateContent(newPrompt);
         return title.response.text();
     } catch (error) {

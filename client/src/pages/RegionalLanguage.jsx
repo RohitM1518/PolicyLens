@@ -1,9 +1,16 @@
 import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import axios from 'axios';
 import Markdown from 'react-markdown';
 import { useSelector } from 'react-redux';
-import { TrashIcon } from '@heroicons/react/24/outline';
 import { format } from 'date-fns';
+import Card from '../components/shared/Card';
+import Button from '../components/shared/Button';
+import PageHeader from '../components/shared/PageHeader';
+import LoadingSpinner from '../components/shared/LoadingSpinner';
+import EmptyState from '../components/shared/EmptyState';
+import { LanguageIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { fadeIn, scaleIn, slideIn } from '../styles/animations';
 
 const languages = [
   { code: 'Hindi', name: 'Hindi' },
@@ -35,7 +42,7 @@ export default function RegionalLanguage() {
         const response = await axios.get(`${backendURL}/regional/language/get/all`, {
           withCredentials: true,
           headers: {
-            'Authorization': `Bearer ${accessToken}`,
+            'Authorization': `Bearer ${accessToken}`
           }
         });
         setPreviousTranslations(response.data.data.data);
@@ -58,7 +65,7 @@ export default function RegionalLanguage() {
       }, {
         withCredentials: true,
         headers: {
-          'Authorization': `Bearer ${accessToken}`,
+          'Authorization': `Bearer ${accessToken}`
         }
       });
       setTranslatedText(response.data.data.data.translatedText);
@@ -77,7 +84,7 @@ export default function RegionalLanguage() {
       await axios.delete(`${backendURL}/regional/language/delete/${id}`, {
         withCredentials: true,
         headers: {
-          'Authorization': `Bearer ${accessToken}`,
+          'Authorization': `Bearer ${accessToken}`
         }
       });
       setPreviousTranslations(prev => prev.filter(translation => translation._id !== id));
@@ -93,58 +100,70 @@ export default function RegionalLanguage() {
   };
 
   return (
-    <div className="py-10">
+    <motion.div {...fadeIn} className="py-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid md:grid-cols-4 gap-6">
           {/* Sidebar */}
-          <div className="md:col-span-1 bg-white rounded-lg shadow p-4 max-h-fit overflow-y-auto">
-            <h3 className="text-lg font-semibold mb-4">Previous Translations</h3>
-            {loadingTranslations ? (
-              <div className="flex justify-center py-4">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {previousTranslations.map((translation) => (
-                  <div key={translation._id} className="relative group">
-                    <button
-                      onClick={() => {
-                        setSelectedTranslation(translation);
-                        setInputText(translation.originalText);
-                        setSelectedLanguage(translation.language);
-                        setTranslatedText(translation.translatedText);
-                      }}
-                      className={`w-full text-left p-2 rounded ${
-                        selectedTranslation?._id === translation._id
-                          ? 'bg-primary text-white'
-                          : 'hover:bg-gray-100'
-                      } border border-slate-200`}
+          <Card className="md:col-span-1">
+            <div className="p-4">
+              <h3 className="text-lg font-semibold mb-4">Previous Translations</h3>
+              {loadingTranslations ? (
+                <div className="flex justify-center py-4">
+                  <LoadingSpinner />
+                </div>
+              ) : previousTranslations.length > 0 ? (
+                <div className="space-y-2">
+                  {previousTranslations.map((translation) => (
+                    <motion.div
+                      key={translation._id}
+                      {...slideIn}
+                      className="relative group"
                     >
-                      <p className="font-bold truncate">{translation.title || 'Untitled'}</p>
-                      <p className="text-sm opacity-75">{translation.language}</p>
-                      <p className="text-xs opacity-75">
-                        {format(new Date(translation.createdAt), 'MMM dd, yyyy')}
-                      </p>
-                    </button>
-                    <button
-                      onClick={(e) => handleDelete(translation._id, e)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1 hover:bg-red-100 rounded-full transition-opacity"
-                    >
-                      <TrashIcon className="h-4 w-4 text-red-600" />
-                    </button>
-                  </div>
-                ))}
-                {previousTranslations.length === 0 && (
-                  <p className="text-gray-500 text-center py-4">No previous translations</p>
-                )}
-              </div>
-            )}
-          </div>
+                      <Button
+                        onClick={() => {
+                          setSelectedTranslation(translation);
+                          setInputText(translation.originalText);
+                          setSelectedLanguage(translation.language);
+                          setTranslatedText(translation.translatedText);
+                        }}
+                        variant={selectedTranslation?._id === translation._id ? 'primary' : 'secondary'}
+                        className="w-full text-left"
+                      >
+                        <div className=' flex flex-col'>
+                        <p className="font-bold">{translation.title || 'Untitled'}</p>
+                        <p className="text-sm opacity-75">{translation.language}</p>
+                        <p className="text-xs opacity-75">
+                          {format(new Date(translation.createdAt), 'MMM dd, yyyy')}
+                        </p>
+                        </div>
+                      </Button>
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        onClick={(e) => handleDelete(translation._id, e)}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1 hover:bg-red-100 rounded-full transition-opacity"
+                      >
+                        <TrashIcon className="h-4 w-4 text-red-600" />
+                      </motion.button>
+                    </motion.div>
+                  ))}
+                </div>
+              ) : (
+                <EmptyState
+                  icon={LanguageIcon}
+                  title="No translations"
+                  description="Your translations will appear here"
+                />
+              )}
+            </div>
+          </Card>
 
           {/* Main content */}
-          <div className="md:col-span-3">
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-2xl font-bold mb-6">Regional Language Translator</h2>
+          <Card className="md:col-span-3">
+            <div className="p-6">
+              <PageHeader
+                title="Regional Language Translator"
+                subtitle="Translate text into multiple regional languages"
+              />
 
               <div className="grid md:grid-cols-2 gap-6">
                 {/* Input section */}
@@ -180,13 +199,14 @@ export default function RegionalLanguage() {
                     />
                   </div>
 
-                  <button
+                  <Button
                     onClick={handleTranslate}
                     disabled={!inputText || !selectedLanguage || loading}
-                    className="w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    variant="primary"
+                    className="w-full"
                   >
                     {loading ? 'Translating...' : 'Translate'}
-                  </button>
+                  </Button>
                 </div>
 
                 {/* Output section */}
@@ -195,20 +215,20 @@ export default function RegionalLanguage() {
                   <div className="border rounded-lg p-4 min-h-[300px] bg-gray-50">
                     {loading ? (
                       <div className="flex items-center justify-center h-full">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                        <LoadingSpinner />
                       </div>
                     ) : (
-                      <div className="prose max-w-none">
+                      <motion.div {...scaleIn} className="prose max-w-none">
                         <Markdown>{translatedText}</Markdown>
-                      </div>
+                      </motion.div>
                     )}
                   </div>
                 </div>
               </div>
             </div>
-          </div>
+          </Card>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

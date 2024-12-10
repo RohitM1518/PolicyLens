@@ -1,17 +1,21 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { motion } from 'framer-motion';
 import { Document, Page, pdfjs } from 'react-pdf';
 import axios from 'axios';
 import Markdown from 'react-markdown';
-import { ContentCopy, Download, Translate } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
-import { TrashIcon } from '@heroicons/react/24/outline';
+import { format } from 'date-fns';
+import Card from '../components/shared/Card';
+import Button from '../components/shared/Button';
+import PageHeader from '../components/shared/PageHeader';
+import LoadingSpinner from '../components/shared/LoadingSpinner';
+import EmptyState from '../components/shared/EmptyState';
+import { DocumentTextIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { ContentCopy, Download, Translate } from '@mui/icons-material';
 import { generatePDF } from '../utils/pdfGenerator';
-import { useCallback } from 'react';
+import { fadeIn, scaleIn, slideIn } from '../styles/animations';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
-
-// Add this state near your other state declarations
-
 
 const languages = [
   { code: 'Hindi', name: 'Hindi' },
@@ -38,26 +42,21 @@ export default function Summaries() {
   const [translatedSummary, setTranslatedSummary] = useState('');
   const [translating, setTranslating] = useState(false);
   const [loadingSummaries, setLoadingSummaries] = useState(true);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const backendURL = import.meta.env.VITE_BACKEND_URL;
   const accessToken = useSelector((state) => state?.currentUser?.accessToken);
-  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
-// Add this useEffect for handling window resize
-useEffect(() => {
-  const handleResize = () => {
-    setWindowWidth(window.innerWidth);
-  };
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
-  window.addEventListener('resize', handleResize);
-  return () => window.removeEventListener('resize', handleResize);
-}, []);
-
-// Create a function to calculate PDF width
-const getPDFWidth = useCallback(() => {
-  if (windowWidth >= 1024) return 800; // Desktop
-  if (windowWidth >= 768) return 600;  // Tablet
-  return windowWidth - 64; // Mobile (with padding)
-}, [windowWidth]);
+  const getPDFWidth = useCallback(() => {
+    if (windowWidth >= 1024) return 800;
+    if (windowWidth >= 768) return 600;
+    return windowWidth - 64;
+  }, [windowWidth]);
 
   useEffect(() => {
     const fetchSummaries = async () => {
@@ -148,12 +147,10 @@ const getPDFWidth = useCallback(() => {
 
   const handleDownload = () => {
     if (!summary?.summarizedText) return;
-
     const doc = generatePDF(
       summary.summarizedText,
       summary.title || 'Policy Summary'
     );
-
     doc.save(`${summary.title || 'policy-summary'}.pdf`);
   };
 
@@ -188,45 +185,67 @@ const getPDFWidth = useCallback(() => {
       setTranslating(false);
     }
   };
+
   return (
-    <div className="py-10">
+    <motion.div {...fadeIn} className="py-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid md:grid-cols-4 gap-6">
-          <div className="md:col-span-1 bg-white rounded-lg shadow p-4 max-h-fit overflow-y-auto">
-            <h3 className="text-lg font-semibold mb-4">Previous Summaries</h3>
-            {loadingSummaries ? (
-              <div className="flex justify-center py-4">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {previousSummaries.map((item) => (
-                  <div key={item._id} className="relative group">
-                    <button
+          {/* Sidebar */}
+          <Card className="md:col-span-1">
+            <div className="p-4">
+              <h3 className="text-lg font-semibold mb-4">Previous Summaries</h3>
+              {loadingSummaries ? (
+                <div className="flex justify-center py-4">
+                  <LoadingSpinner />
+                </div>
+              ) : previousSummaries.length > 0 ? (
+                <div className="space-y-2">
+                  {previousSummaries.map((item) => (
+                    <motion.div
+                    key={item._id}
+                    {...slideIn}
+                    className="relative group"
+                  >
+                    <Button
                       onClick={() => handleClick(item)}
-                      className={`w-full text-left p-2 rounded ${summary?._id === item._id ? 'bg-primary text-white' : 'hover:bg-gray-100'
-                        } border border-slate-200`}
+                      variant={summary?._id === item._id ? 'primary' : 'secondary'}
+                      className="w-full text-left"
                     >
-                      <p className="font-semibold truncate">{item.title}</p>
-                      <p className="text-sm opacity-75 truncate">
-                        {new Date(item.createdAt).toLocaleDateString()}
-                      </p>
-                    </button>
-                    <button
+                      <div className="flex flex-col">
+                        <p className="font-semibold">{item.title}</p>
+                        <p className="text-sm opacity-75">
+                          {format(new Date(item.createdAt), 'MMM dd, yyyy')}
+                        </p>
+                      </div>
+                    </Button>
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
                       onClick={(e) => handleDelete(item._id, e)}
                       className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1 hover:bg-red-100 rounded-full transition-opacity"
                     >
                       <TrashIcon className="h-4 w-4 text-red-600" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+                    </motion.button>
+                  </motion.div>
+                  
+                  ))}
+                </div>
+              ) : (
+                <EmptyState
+                  icon={DocumentTextIcon}
+                  title="No summaries"
+                  description="Your summaries will appear here"
+                />
+              )}
+            </div>
+          </Card>
 
-          <div className="md:col-span-3">
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-2xl font-bold mb-4">PDF Summary Generator</h2>
+          {/* Main content */}
+          <Card className="md:col-span-3">
+            <div className="p-6">
+              <PageHeader
+                title="Policy Summary Generator"
+                subtitle="Generate and translate policy summaries"
+              />
 
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -247,122 +266,124 @@ const getPDFWidth = useCallback(() => {
 
               {loading && (
                 <div className="flex items-center justify-center py-4">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                  <LoadingSpinner />
                 </div>
               )}
 
               {file && !loading && (
-                <div className="space-y-6">
-                  <div className="border rounded-lg p-4">
-                    <h3 className="text-lg font-semibold mb-3">Original Document</h3>
-                    <div className="flex flex-col items-center w-full">
-                      {/* Add a container with responsive width */}
-                      <div className="w-full max-w-[800px] mx-auto">
-                        <Document
-                          file={file}
-                          onLoadSuccess={onDocumentLoadSuccess}
-                          onLoadError={onDocumentLoadError}
-                          className="w-full"
-                        >
-                          <Page
-                            pageNumber={pageNumber}
-                            width={window.innerWidth >= 768 ? 800 : window.innerWidth - 64} // Responsive width
-                            renderTextLayer={false}
-                            className="mb-2 mx-auto"
-                            scale={window.innerWidth < 768 ? 0.8 : 1} // Scale down on mobile
-                          />
-                        </Document>
-                        {error && <p className="text-red-500 mb-2">{error}</p>}
-                        <div className="flex items-center justify-between w-full mt-4 px-2">
-                          <button
-                            disabled={pageNumber <= 1}
-                            onClick={previousPage}
-                            className="bg-primary text-white px-3 py-1.5 text-sm md:px-4 md:py-2 rounded-md disabled:opacity-50 transition-opacity"
+                <motion.div {...scaleIn} className="space-y-6">
+                  <Card>
+                    <div className="p-4">
+                      <h3 className="text-lg font-semibold mb-3">Original Document</h3>
+                      <div className="flex flex-col items-center">
+                        <div className="w-full max-w-[800px] mx-auto">
+                          <Document
+                            file={file}
+                            onLoadSuccess={onDocumentLoadSuccess}
+                            onLoadError={onDocumentLoadError}
                           >
-                            Previous
-                          </button>
-                          <p className="text-xs md:text-sm text-gray-600">
-                            Page {pageNumber} of {numPages}
-                          </p>
-                          <button
-                            disabled={pageNumber >= numPages}
-                            onClick={nextPage}
-                            className="bg-primary text-white px-3 py-1.5 text-sm md:px-4 md:py-2 rounded-md disabled:opacity-50 transition-opacity"
-                          >
-                            Next
-                          </button>
+                            <Page
+                              pageNumber={pageNumber}
+                              width={getPDFWidth()}
+                              renderTextLayer={false}
+                              className="mx-auto"
+                              scale={windowWidth < 768 ? 0.8 : 1}
+                            />
+                          </Document>
+                          {error && <p className="text-red-500 mb-2">{error}</p>}
+                          <div className="flex items-center justify-between w-full mt-4">
+                            <Button
+                              onClick={previousPage}
+                              disabled={pageNumber <= 1}
+                              variant="secondary"
+                            >
+                              Previous
+                            </Button>
+                            <p className="text-sm text-gray-600">
+                              Page {pageNumber} of {numPages}
+                            </p>
+                            <Button
+                              onClick={nextPage}
+                              disabled={pageNumber >= numPages}
+                              variant="secondary"
+                            >
+                              Next
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </Card>
 
-                  <div className="border rounded-lg p-4">
-                    <div className="flex justify-between items-center mb-3">
-                      <h3 className="text-lg font-semibold">Summary</h3>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={handleCopy}
-                          className="p-2 hover:bg-gray-100 rounded-full"
-                          title="Copy to clipboard"
+                  <Card>
+                    <div className="p-4">
+                      <div className="flex justify-between items-center mb-3">
+                        <h3 className="text-lg font-semibold">Summary</h3>
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={handleCopy}
+                            variant="secondary"
+                            icon={ContentCopy}
+                          >
+                            Copy
+                          </Button>
+                          <Button
+                            onClick={handleDownload}
+                            variant="secondary"
+                            icon={Download}
+                          >
+                            Download
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="prose max-w-none mb-4">
+                        <Markdown>{summary.summarizedText}</Markdown>
+                      </div>
+
+                      <div className="flex gap-4 items-center mt-4">
+                        <select
+                          value={selectedLanguage}
+                          onChange={(e) => setSelectedLanguage(e.target.value)}
+                          className="rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
                         >
-                          <ContentCopy />
-                        </button>
-                        <button
-                          onClick={handleDownload}
-                          className="p-2 hover:bg-gray-100 rounded-full"
-                          title="Download summary"
+                          <option value="">Select language</option>
+                          {languages.map((lang) => (
+                            <option key={lang.code} value={lang.code}>
+                              {lang.name}
+                            </option>
+                          ))}
+                        </select>
+                        <Button
+                          onClick={handleTranslate}
+                          disabled={!selectedLanguage || translating}
+                          variant="primary"
+                          icon={Translate}
                         >
-                          <Download />
-                        </button>
+                          Translate
+                        </Button>
                       </div>
+
+                      {translating && (
+                        <div className="mt-4 flex justify-center">
+                          <LoadingSpinner />
+                        </div>
+                      )}
+
+                      {translatedSummary && (
+                        <motion.div {...fadeIn} className="mt-4 border-t pt-4">
+                          <h4 className="font-semibold mb-2">Translated Summary</h4>
+                          <Markdown>{translatedSummary}</Markdown>
+                        </motion.div>
+                      )}
                     </div>
-
-                    <div className="prose max-w-none mb-4">
-                      <Markdown>{summary.summarizedText}</Markdown>
-                    </div>
-
-                    <div className="flex gap-4 items-center mt-4">
-                      <select
-                        value={selectedLanguage}
-                        onChange={(e) => setSelectedLanguage(e.target.value)}
-                        className="rounded-md border-gray-300 outline-none p-2 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50"
-                      >
-                        <option value="">Select language</option>
-                        {languages.map((lang) => (
-                          <option key={lang.code} value={lang.code}>
-                            {lang.name}
-                          </option>
-                        ))}
-                      </select>
-                      <button
-                        onClick={handleTranslate}
-                        disabled={!selectedLanguage || translating}
-                        className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-md hover:bg-secondary disabled:opacity-50"
-                      >
-                        <Translate />
-                        Translate
-                      </button>
-                    </div>
-
-                    {translating && (
-                      <div className="mt-4 flex justify-center">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                      </div>
-                    )}
-
-                    {translatedSummary && (
-                      <div className="mt-4 border-t pt-4">
-                        <h4 className="font-semibold mb-2">Translated Summary</h4>
-                        <Markdown>{translatedSummary}</Markdown>
-                      </div>
-                    )}
-                  </div>
-                </div>
+                  </Card>
+                </motion.div>
               )}
             </div>
-          </div>
+          </Card>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Formik, Form } from 'formik';
+import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import axios from 'axios';
@@ -85,10 +85,10 @@ const initialValues = {
 export default function SignUp() {
   const [currentStep, setCurrentStep] = useState(0);
   const backendURL = import.meta.env.VITE_BACKEND_URL;
-  const {setIsLoading} = useLoadingContext();
-  const {setError} = useErrorContext();
+  const { setIsLoading } = useLoadingContext();
+  const { setError } = useErrorContext();
   const dispatch = useDispatch();
-  const {setUser} = useUserContext();
+  const { setUser } = useUserContext();
   const navigate = useNavigate();
 
   const handleSubmit = async (values) => {
@@ -149,16 +149,128 @@ export default function SignUp() {
       >
         {({ errors, touched, isSubmitting }) => (
           <Form className="space-y-6">
-            {steps[currentStep].fields.map((fieldName) => (
-              <FormInput
-                key={fieldName}
-                label={fieldName.replace(/([A-Z])/g, ' $1').trim()}
-                id={fieldName}
-                name={fieldName}
-                error={errors[fieldName]}
-                touched={touched[fieldName]}
-              />
-            ))}
+            {steps[currentStep].fields.map((fieldName) => {
+              // Special handling for different field types
+              if (fieldName === 'maritalStatus') {
+                return (
+                  <div key={fieldName}>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Marital Status
+                    </label>
+                    <Field
+                      as="select"
+                      name={fieldName}
+                      className="block w-full rounded-md border-0 py-2 px-3 text-gray-900 shadow-sm ring-1 ring-inset placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-black transition-all duration-200 sm:text-sm sm:leading-6"
+                    >
+                      <option value="">Select Status</option>
+                      <option value="Single">Single</option>
+                      <option value="Married">Married</option>
+                      <option value="Divorced">Divorced</option>
+                      <option value="Widowed">Widowed</option>
+                    </Field>
+                  </div>
+                );
+              }
+
+              if (fieldName === 'lifestyleHabits') {
+                return (
+                  <div key={fieldName}>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Lifestyle Habits
+                    </label>
+                    <div className="space-y-2">
+                      <label className="flex items-center">
+                        <Field
+                          type="checkbox"
+                          name="lifestyleHabits"
+                          value="Smoking"
+                          className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded mr-2"
+                          />
+                        Smoking
+                      </label>
+                      <label className="flex items-center">
+                        <Field
+                          type="checkbox"
+                          name="lifestyleHabits"
+                          value="Alcohol"
+                          className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded mr-2"
+                          />
+                        Alcohol
+                      </label>
+                      <label className="flex items-center">
+                        <Field
+                          type="checkbox"
+                          name="lifestyleHabits"
+                          value="None"
+                          className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded mr-2"
+                          />
+                        None
+                      </label>
+                    </div>
+                  </div>
+                );
+              }
+
+              if (fieldName === 'healthStatus') {
+                return (
+                  <div key={fieldName}>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Health Status
+                    </label>
+                    <Field
+                      as="select"
+                      name={fieldName}
+                      className="block w-full rounded-md border-0 py-2 px-3 text-gray-900 shadow-sm ring-1 ring-inset placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary transition-all duration-200 sm:text-sm sm:leading-6"
+                    >
+                      <option value="">Select Status</option>
+                      <option value="Excellent">Excellent</option>
+                      <option value="Good">Good</option>
+                      <option value="Fair">Fair</option>
+                      <option value="Poor">Poor</option>
+                    </Field>
+                  </div>
+                );
+              }
+
+              if (fieldName === 'willingnessToPayPremiums') {
+                return (
+                  <div key={fieldName}>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Premium Payment Frequency
+                    </label>
+                    <Field
+                      as="select"
+                      name={fieldName}
+                      className="block w-full rounded-md border-0 py-2 px-3 text-gray-900 shadow-sm ring-1 ring-inset placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary transition-all duration-200 sm:text-sm sm:leading-6"
+                    >
+                      <option value="">Select Frequency</option>
+                      <option value="Monthly">Monthly</option>
+                      <option value="Quarterly">Quarterly</option>
+                      <option value="Annually">Annually</option>
+                    </Field>
+                  </div>
+                );
+              }
+
+              // Default FormInput for other fields
+              return (
+                <FormInput
+                  key={fieldName}
+                  label={fieldName.replace(/([A-Z])/g, ' $1').trim()}
+                  id={fieldName}
+                  name={fieldName}
+                  type={
+                    ['age', 'monthlySalary', 'annualIncome', 'existingDebts', 'familySize', 'coverageAmountPreference'].includes(fieldName)
+                      ? 'number'
+                      : fieldName === 'password'
+                        ? 'password'
+                        : 'text'
+                  }
+                  error={errors[fieldName]}
+                  touched={touched[fieldName]}
+                />
+              );
+            })}
 
             <div className="flex justify-between pt-4">
               {currentStep > 0 && (
