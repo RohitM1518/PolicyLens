@@ -10,6 +10,12 @@ const messageSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    attachedFile:{
+        type:String,
+    },
+    attachedFileName:{
+        type:String,
+    },
     chat:{
         type: mongoose.Schema.ObjectId,
         ref:"Chat"

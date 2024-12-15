@@ -4,7 +4,7 @@ import APIResponse from "../utils/apiResponse.js";
 import { model, fileManager } from "../config/geminiConfig.js";
 import fs from 'fs' //This is the file system from the node js
 import axios from 'axios';
-
+import {getQueryResults} from '../rag/retriveDocument.js';
 
 const getResponse = async (prompt,language) => {
     // console.log(prompt);
@@ -58,7 +58,7 @@ const generateSummary = async (fileName) => {
     return result.response.text();
 }
 
-const chatBot = async (prompt,chatId,accessToken) => {
+const chatBot = async (prompt,messageId,chatId,accessToken) => {
     // const { prompt } = req.body;
     const messages = await axios.get(`${process.env.BACKEND_URL}/chat/message/get/${chatId}`,{
         withCredentials:true,
@@ -72,10 +72,26 @@ const chatBot = async (prompt,chatId,accessToken) => {
         parts: [{ text: msg.message.trim() }]
     }));
 
+    
+    
     const chat = model.startChat({
         history: history
     });
-    let result = await chat.sendMessage(prompt);
+    let oldMsg = "";
+    messages.data.data.map(msg=>{
+        oldMsg += msg.message.trim();
+    })
+    const newPrompt=prompt+oldMsg
+    //TODO: Get the documents using rag
+    const ragResult = await getQueryResults(newPrompt,messageId,chatId);
+    // console.log("MSG and CHAT ID"+messageId+" "+chatId);
+    console.log("Rag results");
+    console.log(ragResult);
+    let textDocuments = "";
+    ragResult.forEach(doc => {
+            textDocuments += doc.document.pageContent;
+    });
+    let result = await chat.sendMessage(prompt+`Context: ${textDocuments}`);
     return result.response.text();
     // return res.status(200).json(new APIResponse(200, { data: result.response.text() }, "Response generated successfully"));
 }

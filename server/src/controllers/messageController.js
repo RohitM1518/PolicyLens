@@ -6,7 +6,8 @@ import mongoose from "mongoose";
 import APIError from "../utils/apiError.js";
 import APIResponse from "../utils/apiResponse.js";
 import { createNewChat } from "./chatController.js";
-
+import ingestData from '../rag/ingestData.js'
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
 const chatMessageCommonAggregation = () => {
     return [
         {
@@ -35,6 +36,21 @@ const chatMessageCommonAggregation = () => {
 
 const createMessage = asyncHandler(async (req, res) => {
     const { message } = req.body;
+    const attachedFile= req.files?.attachedFile;
+    let attachedFileLocalpath = null;
+    let attachedFileURL;
+    // console.log(attachedFile);
+    if(attachedFile){
+        attachedFileLocalpath = req.files?.attachedFile[0]?.path
+        if(!attachedFileLocalpath){
+            throw new APIError(400, "Attached File is required");
+        }
+        attachedFileURL = await uploadOnCloudinary(attachedFileLocalpath);
+        console.log("File uploaded successfully")
+        if(!attachedFileURL){
+            throw new APIError(500, "Failed to upload Attached File");
+        }
+    }
     const accessToken = req?.accessToken;
     console.log(accessToken);
     let { chatid } = req.params;
@@ -52,15 +68,24 @@ const createMessage = asyncHandler(async (req, res) => {
     const newMessage = await Message.create({
         role: "user",
         message:message,
-        chat: new mongoose.Types.ObjectId(chatid)
+        chat: new mongoose.Types.ObjectId(chatid),
+        attachedFile:attachedFileURL?.url,
+        attachedFileName:req?.body?.fileName
     });
+    console.log("New message is created")
+
     if(!newMessage){
         throw new APIError(500, "Message could not be created");
     }
+    //TODO: Injest the data using the url
+    if(attachedFileURL){
+    await ingestData(attachedFileURL.url,chatid,newMessage._id,req.user._id);
+    }
+    console.log("File is injested successfully")
     chat.lastMessage= newMessage.message;
-    chat.save();
+    await chat.save();
 
-    const responseMessage = await chatBot(message,chatid,accessToken);
+    const responseMessage = await chatBot(message,newMessage._id,chatid,accessToken);
     // console.log(responseMessage);
     const newBotMessage = await Message.create({
         role: "model",

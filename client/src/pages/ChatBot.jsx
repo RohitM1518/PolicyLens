@@ -102,42 +102,54 @@ export default function ChatBot() {
     handleSendMessage(message);
   };
 
-  const handleSendMessage = async (message) => {
-    if (!message.message.trim()) return;
+  const handleSendMessage = async ({ message, file }) => {
+    if (!message.trim() && !file) return;
+  
     const userMessage = {
       id: Date.now(),
-      ...message,
+      message,
       createdAt: new Date().toISOString(),
-      role: "user",
+      role: 'user',
+      attachedFileName:file?.name
     };
-    setMessages(prev => [...prev, userMessage]);
+    setMessages((prev) => [...prev, userMessage]);
     setMessageLoading(true);
-
+  
     try {
+      const formData = new FormData();
+      formData.append('message', message);
+      if (file) {
+        formData.append('attachedFile', file);
+      }
+  
       if (!activeChat) {
-        const res = await axios.post(`${backendURL}/chat/message/create`,
-          { message: userMessage.message },
+        const res = await axios.post(
+          `${backendURL}/chat/message/create`,
+          formData,
           {
             withCredentials: true,
             headers: {
-              'Authorization': `Bearer ${accessToken}`
-            }
+              Authorization: `Bearer ${accessToken}`,
+              'Content-Type': 'multipart/form-data',
+            },
           }
         );
-        setChats(prev => [res.data.data.chat, ...prev]);
+        setChats((prev) => [res.data.data.chat, ...prev]);
         setActiveChat(res.data.data.chat);
-        setMessages(prev => [...prev, res.data.data.newBotMessage]);
+        setMessages((prev) => [...prev, res.data.data.newBotMessage]);
       } else {
-        const res = await axios.post(`${backendURL}/chat/message/create/${activeChat._id}`,
-          { message: userMessage.message },
+        const res = await axios.post(
+          `${backendURL}/chat/message/create/${activeChat._id}`,
+          formData,
           {
             withCredentials: true,
             headers: {
-              'Authorization': `Bearer ${accessToken}`
-            }
+              Authorization: `Bearer ${accessToken}`,
+              'Content-Type': 'multipart/form-data',
+            },
           }
         );
-        setMessages(prev => [...prev, res.data.data.newBotMessage]);
+        setMessages((prev) => [...prev, res.data.data.newBotMessage]);
       }
     } catch (error) {
       console.error('Error sending message:', error);
@@ -145,6 +157,7 @@ export default function ChatBot() {
       setMessageLoading(false);
     }
   };
+  
 
   if (loading) {
     return (

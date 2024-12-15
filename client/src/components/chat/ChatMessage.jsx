@@ -2,9 +2,9 @@ import { UserCircleIcon } from '@heroicons/react/24/solid';
 import { DocumentTextIcon } from '@heroicons/react/24/outline';
 import Markdown from 'react-markdown';
 import { useSelector } from 'react-redux';
-import remarkGfm from 'remark-gfm'
+import remarkGfm from 'remark-gfm';
 
-export default function ChatMessage({ message, isUser, isLoading }) {
+export default function ChatMessage({message, isUser, isLoading }) {
   const user = useSelector(state => state?.currentUser?.user);
 
   if (isLoading) {
@@ -45,22 +45,17 @@ export default function ChatMessage({ message, isUser, isLoading }) {
         </div>
         
         <div className="text-gray-700 prose max-w-none">
-          <Markdown rehypePlugins={[remarkGfm]} >
+          <Markdown rehypePlugins={[remarkGfm]}>
             {message.message}
           </Markdown>
         </div>
         
-        {message.files && message.files.length > 0 && (
+        {message?.attachedFileName && (
           <div className="mt-2 space-y-2">
-            {message.files.map((file, index) => (
-              <div
-                key={index}
-                className="flex items-center gap-2 text-sm text-gray-600 bg-gray-100 p-2 rounded"
-              >
-                <DocumentTextIcon className="h-5 w-5 text-gray-400" />
-                <span>{file.name}</span>
-              </div>
-            ))}
+            <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-100 p-2 rounded">
+              <DocumentTextIcon className="h-5 w-5 text-gray-400" />
+              <span>{message.attachedFileName}</span> {/* Display only the first file */}
+            </div>
           </div>
         )}
       </div>
