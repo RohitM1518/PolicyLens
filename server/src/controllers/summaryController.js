@@ -11,6 +11,7 @@ import { RegionalLanguage } from "../models/regionalLanguageModel.js";
 const createSummary = asyncHandler(async (req, res) => {
     const PolicyPdf= req.files?.PolicyPdf;
     let PolicyPdfLocalpath = null;
+    const user = req.user;
     console.log(PolicyPdfLocalpath);
     if(PolicyPdf){
         PolicyPdfLocalpath = req.files?.PolicyPdf[0]?.path
@@ -26,7 +27,7 @@ const createSummary = asyncHandler(async (req, res) => {
     //This will be set from multer middleware
     const fileName = req.body.fileName;
 
-    const summarizedText = await generateSummary(fileName);
+    const summarizedText = await generateSummary(fileName,user);
     const title = await generateTitle(summarizedText);
 
     const summary = await Summary.create({

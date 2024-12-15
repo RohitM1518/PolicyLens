@@ -40,6 +40,7 @@ const createMessage = asyncHandler(async (req, res) => {
     let attachedFileLocalpath = null;
     let attachedFileURL;
     // console.log(attachedFile);
+    const user = req.user;
     if(attachedFile){
         attachedFileLocalpath = req.files?.attachedFile[0]?.path
         if(!attachedFileLocalpath){
@@ -85,7 +86,7 @@ const createMessage = asyncHandler(async (req, res) => {
     chat.lastMessage= newMessage.message;
     await chat.save();
 
-    const responseMessage = await chatBot(message,newMessage._id,chatid,accessToken);
+    const responseMessage = await chatBot(message,newMessage._id,chatid,accessToken,user);
     // console.log(responseMessage);
     const newBotMessage = await Message.create({
         role: "model",
