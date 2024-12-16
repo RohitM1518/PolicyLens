@@ -4,7 +4,9 @@ import mongoose from 'mongoose';
 
 export async function getQueryResults(query, messageId, chatId) {
     try {
+        console.log("Query: 1");
         const queryEmbeddings = await getEmbeddings(query);
+        console.log("Query: 2");
 
         // First pipeline: Search by messageId
         const messageIdPipeline = [
@@ -28,6 +30,7 @@ export async function getQueryResults(query, messageId, chatId) {
                 }
             }
         ];
+        console.log("Query: 3");
 
         // Second pipeline: Search by chatId
         const chatIdPipeline = [
@@ -51,7 +54,7 @@ export async function getQueryResults(query, messageId, chatId) {
                 }
             }
         ];
-
+        console.log("Query: 4");
         const messageIdResults = await ChatEmbedding.aggregate(messageIdPipeline);
         console.log(messageIdResults);
         const chatIdResults = await ChatEmbedding.aggregate(chatIdPipeline);
