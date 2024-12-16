@@ -131,13 +131,21 @@ const generateSummary = async (fileName, user) => {
 
 const chatBot = async (prompt, messageId, chatId, accessToken,user) => {
     // const { prompt } = req.body;
+    console.log("Prompt: ", prompt, messageId, chatId,accessToken,user);
+    let messages;
     try {
-        const messages = await axios.get(`${process.env.BACKEND_URL}/chat/message/get/${chatId}`, {
-            withCredentials: true,
-            headers: {
-                'Authorization': `Bearer ${accessToken}`
-            }
-        });
+        try {
+            messages = await axios.get(`${process.env.BACKEND_URL}/chat/message/get/${chatId}`, {
+                withCredentials: true,
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+        } catch (error) {
+            console.error("Error fetching messages:", error.message);
+            console.error("Error details:", error.response?.data || error.stack);
+            throw new Error("Failed to retrieve chat history.");
+        }        
         // console.log(messages.data.data);
         const history = messages.data.data.map(msg => ({
             role: msg.role,
