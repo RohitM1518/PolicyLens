@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { authUserMiddleware } from "../middlewares/authUserMiddleware.js";
-import { createMessage, getAllMessages } from "../controllers/messageController.js";
+import { createMessage, getAllMessages, getSuggestedMessages } from "../controllers/messageController.js";
 import { upload } from "../middlewares/multerMiddleware.js";
 const router = Router();
 
@@ -19,5 +19,5 @@ router.post("/create", upload.fields([
     },
 ]), createMessage);
 router.get("/get/:chatId", getAllMessages);
-
+router.get("/suggested", getSuggestedMessages);
 export default router;

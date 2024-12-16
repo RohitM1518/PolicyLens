@@ -163,9 +163,37 @@ const chatBot = async (prompt, messageId, chatId, accessToken,user) => {
     return result.response.text();
     // return res.status(200).json(new APIResponse(200, { data: result.response.text() }, "Response generated successfully"));
 }
+
+const generateSuggestedMessages = async (messages,user) => {
+    const generationConfig = {
+        temperature: 1,
+        topP: 0.95,
+        topK: 40,
+        maxOutputTokens: 8192,
+        responseMimeType: "application/json",
+    };  
+    const messageText = messages.map(msg => msg.message).join('\n');
+    const chatSession = model.startChat({
+        generationConfig,
+        history:[
+            {
+                "role": "user",
+                "parts": [
+                    {
+                        "text": messageText+"These are the users last asked questions based on this I want you to generate 6 suggested questions to user that user may ask in future and do not give any extra answer"
+                    }
+                ]
+            }
+        ]
+})
+    const userContext = formatUserContext(user);
+    const result = await chatSession.sendMessage(`Generate Next 6 Questions based \nMy Context:${userContext}`);
+    return result.response.text();
+}
 export {
     getResponse,
     generateSummary,
     chatBot,
-    generateTitle
+    generateTitle,
+    generateSuggestedMessages
 }

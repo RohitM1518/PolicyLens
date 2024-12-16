@@ -11,14 +11,6 @@ import EmptyState from '../components/shared/EmptyState';
 import { ChatBubbleBottomCenterTextIcon } from '@heroicons/react/24/outline';
 import { fadeIn, slideIn } from '../styles/animations';
 
-const suggestions = [
-  "What insurance policies do you recommend for a small family?",
-  "Explain health insurance coverage options",
-  "How do I file an insurance claim?",
-  "What factors affect my insurance premium?",
-  "Compare term life vs whole life insurance",
-  "Compare term life vs whole life insurance"
-];
 
 export default function ChatBot() {
   const [chats, setChats] = useState([]);
@@ -27,6 +19,8 @@ export default function ChatBot() {
   const [loading, setLoading] = useState(true);
   const [messageLoading, setMessageLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(true); 
+  const [suggestions, setSuggestions] = useState([])
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
   const backendURL = import.meta.env.VITE_BACKEND_URL;
@@ -68,6 +62,42 @@ export default function ChatBot() {
     fetchChats();
   }, []);
 
+  //TODO: Think on what to add in dependency
+  useEffect(() => {
+    const fetchSuggestedMessages = async () => {
+      try {
+        const res = await axios.get(`${backendURL}/chat/message/suggested`,
+          {
+            withCredentials: true,
+            headers: {
+              'Authorization': `Bearer ${accessToken}`
+            }
+          }
+        );
+        console.log(res)
+        const parsedData = JSON.parse(res.data.data)
+        const keys = Object.keys(parsedData); // Get all keys of the object
+        let extractedArray = null;
+        console.log(keys)
+        // Look for keys that might contain an array (e.g., 'suggestedQuestions', 'questions', etc.)
+        for (let key of keys) {
+          if (Array.isArray(parsedData[key])) {
+            extractedArray = parsedData[key];
+            break; // Once we find the array, break the loop
+          }
+        }
+        setSuggestions(extractedArray);
+      } catch (error) {
+        console.error('Error fetching suggested Messages:', error);
+      }
+      finally{
+        setSuggestionsLoading(false);
+      }
+    };
+
+    fetchSuggestedMessages();
+  }, []);
+
   useEffect(() => {
     if (activeChat?._id) {
       const fetchMessages = async () => {
@@ -104,24 +134,24 @@ export default function ChatBot() {
 
   const handleSendMessage = async ({ message, file }) => {
     if (!message.trim() && !file) return;
-  
+
     const userMessage = {
       id: Date.now(),
       message,
       createdAt: new Date().toISOString(),
       role: 'user',
-      attachedFileName:file?.name
+      attachedFileName: file?.name
     };
     setMessages((prev) => [...prev, userMessage]);
     setMessageLoading(true);
-  
+
     try {
       const formData = new FormData();
       formData.append('message', message);
       if (file) {
         formData.append('attachedFile', file);
       }
-  
+
       if (!activeChat) {
         const res = await axios.post(
           `${backendURL}/chat/message/create`,
@@ -157,7 +187,7 @@ export default function ChatBot() {
       setMessageLoading(false);
     }
   };
-  
+
 
   if (loading) {
     return (
@@ -168,7 +198,7 @@ export default function ChatBot() {
   }
 
   return (
-    <motion.div 
+    <motion.div
       {...fadeIn}
       className="flex h-[calc(100vh-64px)] overflow-hidden relative"
     >
@@ -208,9 +238,9 @@ export default function ChatBot() {
           onClick={() => setSidebarOpen(false)}
         />
       )}
-      
+
       <div className="flex-grow flex flex-col relative">
-        <div 
+        <div
           ref={chatContainerRef}
           className="flex-grow overflow-y-auto px-4 pb-20 mb-10"
         >
@@ -224,37 +254,43 @@ export default function ChatBot() {
           {
             !activeChat && messages.length === 0 && (
               <EmptyState
-                icon={ChatBubbleBottomCenterTextIcon}
-                title="Start a New Chat"
-                description="Choose a suggestion or type your own message to begin"
-                action={
-                  <div className="max-w-3xl mx-auto mt-8">
-                    <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
-                      {suggestions.map((suggestion, index) => (
+              icon={ChatBubbleBottomCenterTextIcon}
+              title="Start a New Chat"
+              description="Choose a suggestion or type your own message to begin"
+              action={
+                <div className="max-w-3xl mx-auto mt-8">
+                  <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
+                    {suggestionsLoading ? (
+                      <div className="flex justify-center col-span-2 lg:col-span-3">
+                        <LoadingSpinner size="lg" />
+                      </div>
+                    ) : (
+                      suggestions.map((suggestion, index) => (
                         <motion.button
                           key={index}
                           whileHover={{ scale: 1.02, backgroundColor: "#f3f4f6" }}
                           whileTap={{ scale: 0.98 }}
-                          onClick={() => handleSuggestion({message: suggestion})}
+                          onClick={() => handleSuggestion({ message: suggestion })}
                           className="text-left border border-gray-200 text-sm text-gray-600 p-4 rounded-lg 
                                      shadow-sm hover:shadow-md hover:border-primary/20
                                      bg-white transition-all duration-200
                                      min-h-[80px] flex items-center"
                         >
-                          <span className="line-clamp-3">{suggestion}</span>
+                          <span>{suggestion}</span>
                         </motion.button>
-                      ))}
-                    </div>
+                      ))
+                    )}
                   </div>
-                }
-              />
+                </div>
+              }
+            />
             )
-            
+
           }
           {messageLoading && <ChatMessage isLoading={true} />}
           <div ref={messagesEndRef} />
         </div>
-        
+
         <div className="absolute bottom-6 left-0 right-0 bg-white border-t">
           <div className="max-w-7xl mx-auto px-4 py-2">
             <ChatInput onSendMessage={handleSendMessage} />
