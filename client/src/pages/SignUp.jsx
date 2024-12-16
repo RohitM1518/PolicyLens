@@ -12,7 +12,7 @@ import { errorParser } from '../utils/errorParser';
 import { useUserContext } from '../contexts/UserContext';
 import { useNavigate } from 'react-router-dom';
 import FormInput from '../components/auth/FormInput';
-import AuthLayout from '../components/auth/authLayout';
+import AuthLayout from '../components/auth/AuthLayout';
 
 const steps = [
   {
