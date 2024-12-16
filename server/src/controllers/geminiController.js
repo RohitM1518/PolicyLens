@@ -129,25 +129,12 @@ const generateSummary = async (fileName, user) => {
         console.log(error);
     }}
 
-const chatBot = async (prompt, messageId, chatId, accessToken,user) => {
+const chatBot = async (prompt, messageId, chatId, accessToken,user,messages) => {
     // const { prompt } = req.body;
-    console.log("Prompt: ", prompt, messageId, chatId,accessToken,user);
-    let messages;
+    // console.log("Prompt: ", prompt, messageId, chatId,accessToken,user);
     try {
-        try {
-            messages = await axios.get(`${process.env.BACKEND_URL}/chat/message/get/${chatId}`, {
-                withCredentials: true,
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`
-                }
-            });
-        } catch (error) {
-            console.error("Error fetching messages:", error.message);
-            console.error("Error details:", error.response?.data || error.stack);
-            throw new Error("Failed to retrieve chat history.");
-        }        
         // console.log(messages.data.data);
-        const history = messages.data.data.map(msg => ({
+        const history = messages?.map(msg => ({
             role: msg.role,
             parts: [{ text: msg.message.trim() }]
         }));
@@ -159,7 +146,7 @@ const chatBot = async (prompt, messageId, chatId, accessToken,user) => {
             history: history
         });
         let oldMsg = "";
-        messages.data.data.map(msg => {
+        messages.map(msg => {
             oldMsg += msg.message.trim();
         })
         const ragPrompt = `${prompt} Old Message Context: ${oldMsg}`

@@ -19,7 +19,7 @@ export default function ChatBot() {
   const [loading, setLoading] = useState(true);
   const [messageLoading, setMessageLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [suggestionsLoading, setSuggestionsLoading] = useState(true); 
+  const [suggestionsLoading, setSuggestionsLoading] = useState(true);
   const [suggestions, setSuggestions] = useState([])
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
@@ -90,7 +90,7 @@ export default function ChatBot() {
       } catch (error) {
         console.error('Error fetching suggested Messages:', error);
       }
-      finally{
+      finally {
         setSuggestionsLoading(false);
       }
     };
@@ -147,6 +147,7 @@ export default function ChatBot() {
 
     try {
       const formData = new FormData();
+
       formData.append('message', message);
       if (file) {
         formData.append('attachedFile', file);
@@ -168,6 +169,22 @@ export default function ChatBot() {
         setActiveChat(res.data.data.chat);
         setMessages((prev) => [...prev, res.data.data.newBotMessage]);
       } else {
+        let result;
+        try {
+           result = await axios.get(`${backendURL}/chat/message/get/${activeChat?._id}`, {
+            withCredentials: true,
+            headers: {
+              'Authorization': `Bearer ${accessToken}`
+            }
+          });
+          // console.log("Results ")
+          console.log(result)
+        } catch (error) {
+          console.error("Error fetching messages:", error.message);
+          console.error("Error details:", error.response?.data || error.stack);
+          throw new Error("Failed to retrieve chat history.");
+        }
+        formData.append("messages",JSON.stringify(result?.data?.data))
         const res = await axios.post(
           `${backendURL}/chat/message/create/${activeChat._id}`,
           formData,
@@ -254,36 +271,36 @@ export default function ChatBot() {
           {
             !activeChat && messages.length === 0 && (
               <EmptyState
-              icon={ChatBubbleBottomCenterTextIcon}
-              title="Start a New Chat"
-              description="Choose a suggestion or type your own message to begin"
-              action={
-                <div className="max-w-3xl mx-auto mt-8">
-                  <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
-                    {suggestionsLoading ? (
-                      <div className="flex justify-center col-span-2 lg:col-span-3">
-                        <LoadingSpinner size="lg" />
-                      </div>
-                    ) : (
-                      suggestions.map((suggestion, index) => (
-                        <motion.button
-                          key={index}
-                          whileHover={{ scale: 1.02, backgroundColor: "#f3f4f6" }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => handleSuggestion({ message: suggestion })}
-                          className="text-left border border-gray-200 text-sm text-gray-600 p-4 rounded-lg 
+                icon={ChatBubbleBottomCenterTextIcon}
+                title="Start a New Chat"
+                description="Choose a suggestion or type your own message to begin"
+                action={
+                  <div className="max-w-3xl mx-auto mt-8">
+                    <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
+                      {suggestionsLoading ? (
+                        <div className="flex justify-center col-span-2 lg:col-span-3">
+                          <LoadingSpinner size="lg" />
+                        </div>
+                      ) : (
+                        suggestions.map((suggestion, index) => (
+                          <motion.button
+                            key={index}
+                            whileHover={{ scale: 1.02, backgroundColor: "#f3f4f6" }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => handleSuggestion({ message: suggestion })}
+                            className="text-left border border-gray-200 text-sm text-gray-600 p-4 rounded-lg 
                                      shadow-sm hover:shadow-md hover:border-primary/20
                                      bg-white transition-all duration-200
                                      min-h-[80px] flex items-center"
-                        >
-                          <span>{suggestion}</span>
-                        </motion.button>
-                      ))
-                    )}
+                          >
+                            <span>{suggestion}</span>
+                          </motion.button>
+                        ))
+                      )}
+                    </div>
                   </div>
-                </div>
-              }
-            />
+                }
+              />
             )
 
           }

@@ -62,8 +62,9 @@ const getLastFewMessages = async (userid) => {
 }
 
 const createMessage = asyncHandler(async (req, res) => {
-    const { message } = req.body;
-    const attachedFile = req.files?.attachedFile;
+    const { message} = req.body;
+    const messages = JSON.parse(req.body?.messages); // Parse the messages array
+    console.log(messages);    const attachedFile = req.files?.attachedFile;
     let attachedFileLocalpath = null;
     let attachedFileURL;
     // console.log(attachedFile);
@@ -114,7 +115,7 @@ const createMessage = asyncHandler(async (req, res) => {
     chat.lastMessage = newMessage.message;
     await chat.save();
 
-    const responseMessage = await chatBot(message, newMessage._id, chatid, accessToken, user);
+    const responseMessage = await chatBot(message, newMessage._id, chatid, accessToken, user,messages);
     // console.log(responseMessage);
     const newBotMessage = await Message.create({
         role: "model",
