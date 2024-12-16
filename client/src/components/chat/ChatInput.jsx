@@ -39,13 +39,13 @@ export default function ChatInput({ onSendMessage }) {
       )}
 
       <div className="flex gap-4">
-        <button
+        {/* <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
           className="flex-shrink-0 text-gray-500 hover:text-gray-700"
         >
           <PaperClipIcon className="h-6 w-6" />
-        </button>
+        </button> */}
 
         <input
           type="file"

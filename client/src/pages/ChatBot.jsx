@@ -154,6 +154,7 @@ export default function ChatBot() {
       }
 
       if (!activeChat) {
+        formData.append('messages', JSON.stringify([]))
         const res = await axios.post(
           `${backendURL}/chat/message/create`,
           formData,
@@ -171,20 +172,20 @@ export default function ChatBot() {
       } else {
         let result;
         try {
-           result = await axios.get(`${backendURL}/chat/message/get/${activeChat?._id}`, {
+          result = await axios.get(`${backendURL}/chat/message/get/${activeChat?._id}`, {
             withCredentials: true,
             headers: {
               'Authorization': `Bearer ${accessToken}`
             }
           });
-          // console.log("Results ")
-          console.log(result)
+          console.log("Results ")
+          console.log(result.data.data)
         } catch (error) {
           console.error("Error fetching messages:", error.message);
           console.error("Error details:", error.response?.data || error.stack);
           throw new Error("Failed to retrieve chat history.");
         }
-        formData.append("messages",JSON.stringify(result?.data?.data))
+        formData.append("messages", JSON.stringify(result?.data?.data))
         const res = await axios.post(
           `${backendURL}/chat/message/create/${activeChat._id}`,
           formData,
@@ -308,11 +309,12 @@ export default function ChatBot() {
           <div ref={messagesEndRef} />
         </div>
 
-        <div className="absolute bottom-6 left-0 right-0 bg-white border-t">
+        <div className="absolute bottom-6 max-lg:bottom-0 left-0 right-0 bg-white border-t fixed lg:relative">
           <div className="max-w-7xl mx-auto px-4 py-2">
             <ChatInput onSendMessage={handleSendMessage} />
           </div>
         </div>
+
       </div>
     </motion.div>
   );

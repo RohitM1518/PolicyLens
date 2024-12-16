@@ -64,7 +64,8 @@ const getLastFewMessages = async (userid) => {
 const createMessage = asyncHandler(async (req, res) => {
     const { message} = req.body;
     const messages = JSON.parse(req.body?.messages); // Parse the messages array
-    console.log(messages);    const attachedFile = req.files?.attachedFile;
+    console.log(messages);    
+    const attachedFile = req.files?.attachedFile;
     let attachedFileLocalpath = null;
     let attachedFileURL;
     // console.log(attachedFile);
