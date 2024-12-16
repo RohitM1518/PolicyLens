@@ -11,7 +11,7 @@ import PageHeader from '../components/shared/PageHeader';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
 import EmptyState from '../components/shared/EmptyState';
 import { DocumentTextIcon, TrashIcon } from '@heroicons/react/24/outline';
-import { ContentCopy, Download, Translate } from '@mui/icons-material';
+import { ContentCopy, Download, Translate,VolumeUp, Check, VolumeMute } from '@mui/icons-material';
 import { generatePDF } from '../utils/pdfGenerator';
 import { fadeIn, scaleIn, slideIn } from '../styles/animations';
 
@@ -45,6 +45,9 @@ export default function Summaries() {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const backendURL = import.meta.env.VITE_BACKEND_URL;
   const accessToken = useSelector((state) => state?.currentUser?.accessToken);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
+  const [isDownloaded, setIsDownloaded] = useState(false);
 
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
@@ -139,7 +142,9 @@ export default function Summaries() {
 
   const handleCopy = async () => {
     try {
+      setIsCopied(true)
       await navigator.clipboard.writeText(summary.summarizedText);
+      setTimeout(() => setIsCopied(false), 2000);
     } catch (err) {
       console.error('Failed to copy text:', err);
     }
@@ -147,11 +152,13 @@ export default function Summaries() {
 
   const handleDownload = () => {
     if (!summary?.summarizedText) return;
+    setIsDownloaded(true)
     const doc = generatePDF(
       summary.summarizedText,
       summary.title || 'Policy Summary'
     );
     doc.save(`${summary.title || 'policy-summary'}.pdf`);
+    setTimeout(() => setIsDownloaded(false), 2500);
   };
 
   const handleClick = (item) => {
@@ -186,6 +193,44 @@ export default function Summaries() {
     }
   };
 
+  // Function to convert text to speech
+  const speakText = (text) => {
+    const speech = new SpeechSynthesisUtterance(text); // Create a new speech utterance
+    speech.lang = 'en-US'; // Set the language (optional)
+
+    // Event listeners for speech start and end
+    speech.onstart = () => {
+      setIsSpeaking(true); // Set state to true when speech starts
+    };
+
+    speech.onend = () => {
+      setIsSpeaking(false); // Set state to false when speech ends
+    };
+
+    window.speechSynthesis.speak(speech); // Speak the text
+  };
+
+  // Function to stop speech
+  const stopSpeech = () => {
+    window.speechSynthesis.cancel(); // Stop the speech synthesis
+    setIsSpeaking(false); // Set state to false when speech is canceled
+  };
+  // Example usage
+  function removeFormatting(text) {
+    // Remove markdown bold (asterisks)
+    return text.replace(/\*/g, ''); // Removes all asterisks
+  }
+
+  const handleSpeech = () => {
+    if (isSpeaking) {
+      stopSpeech();
+    }
+    else {
+      // speakText(translatedSummary);
+      speakText(removeFormatting(summary?.summarizedText));
+    }
+  }
+
   return (
     <motion.div {...fadeIn} className="py-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -202,31 +247,31 @@ export default function Summaries() {
                 <div className="space-y-2">
                   {previousSummaries.map((item) => (
                     <motion.div
-                    key={item._id}
-                    {...slideIn}
-                    className="relative group"
-                  >
-                    <Button
-                      onClick={() => handleClick(item)}
-                      variant={summary?._id === item._id ? 'primary' : 'secondary'}
-                      className="w-full text-left"
+                      key={item._id}
+                      {...slideIn}
+                      className="relative group"
                     >
-                      <div className="flex flex-col">
-                        <p className="font-semibold">{item.title}</p>
-                        <p className="text-sm opacity-75">
-                          {format(new Date(item.createdAt), 'MMM dd, yyyy')}
-                        </p>
-                      </div>
-                    </Button>
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      onClick={(e) => handleDelete(item._id, e)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1 hover:bg-red-100 rounded-full transition-opacity"
-                    >
-                      <TrashIcon className="h-4 w-4 text-red-600" />
-                    </motion.button>
-                  </motion.div>
-                  
+                      <Button
+                        onClick={() => handleClick(item)}
+                        variant={summary?._id === item._id ? 'primary' : 'secondary'}
+                        className="w-full text-left"
+                      >
+                        <div className="flex flex-col">
+                          <p className="font-semibold">{item.title}</p>
+                          <p className="text-sm opacity-75">
+                            {format(new Date(item.createdAt), 'MMM dd, yyyy')}
+                          </p>
+                        </div>
+                      </Button>
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        onClick={(e) => handleDelete(item._id, e)}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1 hover:bg-red-100 rounded-full transition-opacity"
+                      >
+                        <TrashIcon className="h-4 w-4 text-red-600" />
+                      </motion.button>
+                    </motion.div>
+
                   ))}
                 </div>
               ) : (
@@ -321,18 +366,24 @@ export default function Summaries() {
                         <h3 className="text-lg font-semibold">Summary</h3>
                         <div className="flex gap-2">
                           <Button
+                            onClick={handleSpeech}
+                            variant="secondary"
+                            icon={isSpeaking?VolumeMute:VolumeUp}
+                          >
+                          </Button>
+                          <Button
                             onClick={handleCopy}
                             variant="secondary"
-                            icon={ContentCopy}
+                            icon={isCopied?Check:ContentCopy}
                           >
-                            Copy
+                            {isCopied?(<>Copied</>):(<>Copy</>)}
                           </Button>
                           <Button
                             onClick={handleDownload}
                             variant="secondary"
-                            icon={Download}
+                            icon={isDownloaded?Check:Download}
                           >
-                            Download
+                            {isDownloaded?(<>Downloaded</>):(<>Download</>)}
                           </Button>
                         </div>
                       </div>
