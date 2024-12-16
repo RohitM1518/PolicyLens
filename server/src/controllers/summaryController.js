@@ -46,7 +46,7 @@ const createSummary = asyncHandler(async (req, res) => {
 });
 
 const getAllSummaries = asyncHandler(async(req,res)=>{
-    const summaries = await Summary.find({owner:req.user._id}).populate('translatedText');
+    const summaries = await Summary.find({owner:req.user._id}).populate('translatedText').sort({createdAt:-1});
     return res.status(200).json(new APIResponse(200, {summaries}, "All summaries fetched successfully"));
 })
 
