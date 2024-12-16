@@ -2,7 +2,7 @@ import { MongoClient } from 'mongodb';
 
 // Connect to your Atlas cluster
 const client = new MongoClient(process.env.MONGODB_URI);
-console.log("Starting Index process."+process.env.MONGODB_URI);
+// console.log("Starting Index process."+process.env.MONGODB_URI);
 async function run() {
     try {
       const database = client.db("capstone");
