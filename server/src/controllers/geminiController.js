@@ -155,15 +155,15 @@ const chatBot = async (prompt, messageId, chatId, accessToken,user,messages) => 
         const ragPrompt = `${prompt} Old Message Context: ${oldMsg}`
         console.log("5")
         //TODO: Get the documents using rag
-        const ragResult = await getQueryResults(ragPrompt, messageId, chatId);
+        // const ragResult = await getQueryResults(ragPrompt, messageId, chatId);
         console.log("6")
         // console.log("MSG and CHAT ID"+messageId+" "+chatId);
         console.log("Rag results");
-        console.log(ragResult);
+        // console.log(ragResult);
         let textDocuments = "";
-        ragResult.forEach(doc => {
-            textDocuments += doc.document.pageContent;
-        });
+        // ragResult.forEach(doc => {
+        //     textDocuments += doc.document.pageContent;
+        // });
         let result = await chat.sendMessage( `${prompt} Context: ${textDocuments} User Context: ${userContext} Instead of User name use it as first Person pronoun`);
         return result.response.text();
         // return res.status(200).json(new APIResponse(200, { data: result.response.text() }, "Response generated successfully"));

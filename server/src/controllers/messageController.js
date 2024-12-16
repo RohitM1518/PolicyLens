@@ -108,9 +108,9 @@ const createMessage = asyncHandler(async (req, res) => {
         throw new APIError(500, "Message could not be created");
     }
     //TODO: Injest the data using the url
-    if (attachedFile) {
-        await ingestData(attachedFileURL?.url, chatid, newMessage._id, req.user._id);
-    }
+    // if (attachedFile) {
+    //     await ingestData(attachedFileURL?.url, chatid, newMessage._id, req.user._id);
+    // }
     console.log("File is injested successfully")
     chat.lastMessage = newMessage.message;
     await chat.save();
