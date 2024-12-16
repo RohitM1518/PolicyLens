@@ -131,27 +131,32 @@ const generateSummary = async (fileName, user) => {
 
 const chatBot = async (prompt, messageId, chatId, accessToken,user,messages) => {
     // const { prompt } = req.body;
-    // console.log("Prompt: ", prompt, messageId, chatId,accessToken,user);
+    console.log("Prompt: ", prompt, messageId, chatId,accessToken,user);
     try {
         // console.log(messages.data.data);
         const history = messages?.map(msg => ({
             role: msg.role,
             parts: [{ text: msg.message.trim() }]
         }));
-        
+        console.log("1")
         const userContext = formatUserContext(user);
-    
-    
+        console.log("2")
+        
+        
         const chat = model.startChat({
             history: history
         });
+        console.log("3")
         let oldMsg = "";
         messages.map(msg => {
             oldMsg += msg.message.trim();
         })
+        console.log("4")
         const ragPrompt = `${prompt} Old Message Context: ${oldMsg}`
+        console.log("5")
         //TODO: Get the documents using rag
         const ragResult = await getQueryResults(ragPrompt, messageId, chatId);
+        console.log("6")
         // console.log("MSG and CHAT ID"+messageId+" "+chatId);
         console.log("Rag results");
         console.log(ragResult);
