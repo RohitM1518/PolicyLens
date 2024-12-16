@@ -27,7 +27,10 @@ async function run() {
       // Call the method to create the index
       const result = await collection.createSearchIndex(index);
       console.log(result);
-    } finally {
+    }catch(err){
+      console.log(err.stack);
+    }
+    finally {
       await client.close();
     }
 }
