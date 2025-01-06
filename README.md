@@ -63,28 +63,40 @@ The system architecture follows a MERN (MongoDB, Express.js, React.js, Node.js) 
 ## Screenshots
 **Home Page**
 ![image](https://github.com/user-attachments/assets/5c28e4de-1bdc-4e1c-ba17-39c6ba54ad06)
+
 **Sign Up page**
 ![image](https://github.com/user-attachments/assets/c60ee03f-b765-495b-a203-153f24e00c37)
+
 **Sign In page**
 ![image](https://github.com/user-attachments/assets/e681f51c-0000-46d5-8a05-79ff8c37ba2c)
+
 **Policy Summary Generator page for creating concise policy overviews**
 ![image](https://github.com/user-attachments/assets/5b6d3135-7da3-4665-b199-eb81a0a09eb1)
+
 **Policy Summary Page generated using the provided policy PDF**
 ![image](https://github.com/user-attachments/assets/932499e4-4ed8-4e92-9e19-a700bd868d49)
+
 **Translation of the summary into the user's preferred native language for better understanding**
 ![image](https://github.com/user-attachments/assets/218db882-1127-49d0-ad22-f4f8eaf87725)
+
 **English text translated into regional languages to improve accessibility and user experience**
 ![image](https://github.com/user-attachments/assets/42fa600f-6255-4044-91e6-7a23c01e4c56)
+
 **Initiating a new chat with query recommendations tailored to the user's context**
 ![image](https://github.com/user-attachments/assets/47ad2d83-8d4c-4e49-a426-b0ff4e612caa)
+
 **User interacting with the chatbot for assistance and query resolution**
 ![image](https://github.com/user-attachments/assets/cd977919-75fb-4c83-8e27-9fe8e95ee770)
+
 **Updating user profile details to provide better context and personalization**
 ![image](https://github.com/user-attachments/assets/b509d012-58a4-466f-ba3f-5557106ef037)
+
 **Updating the user password by verifying the old password for security**
 ![image](https://github.com/user-attachments/assets/019f8a03-d409-4464-b633-206f7599667b)
+
 **Including an insurance policy on the personalized dashboard for easy access and management**
 ![image](https://github.com/user-attachments/assets/0921419f-eb64-48d4-b9d9-35f431c98575)
+
 **Dashboard displaying a list of user-added insurance policies for convenient tracking and management**
 ![image](https://github.com/user-attachments/assets/0a6c86f6-8538-4338-91f0-af4f0f12281e)
 
@@ -130,7 +142,7 @@ The system architecture follows a MERN (MongoDB, Express.js, React.js, Node.js) 
 Open your web browser and navigate to http://localhost:5173 (or your defined frontend port) to access PolicyLens.
 
 
-## Future EnhancementsAdvanced Policy Comparisons:
+## Future Enhancements Advanced Policy Comparisons:
 - Allow users to compare different insurance policies side-by-side.
 - Automated Claim Assistance:  Guide users through the claims process with AI-powered assistance.
 - Integration with Insurance Providers: Enable seamless policy management and claims filing within the platform.
