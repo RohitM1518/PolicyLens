@@ -4,7 +4,7 @@ import App from './App.jsx';
 import './index.css';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import AuthLayout from './utils/AuthLayout.jsx';
-import { Home, Summaries, RegionalLanguage, ChatBot, SignIn, SignUp, Dashboard, Profile } from './pages/index.js';
+import { Home, Summaries, RegionalLanguage, ChatBot, SignIn, SignUp, Dashboard, Profile, NotFound } from './pages/index.js';
 import { Provider } from 'react-redux';
 import { store, persistor } from './redux/store.js';
 import { ErrorContextProvider } from './contexts/ErrorContext.jsx';
@@ -64,7 +64,14 @@ const router = createBrowserRouter([
         element: <AuthLayout authentication={true}>
           <Profile />
         </AuthLayout>
-      }
+      },
+      {
+        path: '*',
+        element: <AuthLayout authentication={true}>
+          <NotFound />
+        </AuthLayout>
+      },
+
     ]
   }
 ]);
