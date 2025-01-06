@@ -103,7 +103,7 @@ export default function Home() {
 
       {/* Animated Shield Section */}
       <section className="relative h-[60vh] bg-gradient-to-b from-gray-50 to-white flex flex-col items-center justify-center">
-        <h1 className=' font-bold text-6xl mb-7'>We Help You To Buy Insurance</h1>
+        <h1 className=' font-bold text-6xl mb-7 text-center'>We Help You To Buy Insurance</h1>
         <AnimatedShield />
       </section>
 
